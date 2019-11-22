@@ -98,7 +98,7 @@ function tree_OnSelectionChanged(e, data)
     let node = data.instance.get_selected(true)[0];
 
     // Fill folder/sub fields
-    if (node == null) {
+    if (node === null) {
         filterForm_folderId.val('');
         filterForm_subId.val('');
     }
@@ -129,8 +129,7 @@ function videos_ResetPageAndReloadWithTimer()
     filters_form.find('input[name=page]').val("1");
 
     clearTimeout(videos_timeout);
-    videos_timeout = setTimeout(function()
-    {
+    videos_timeout = setTimeout(() => {
         videos_Reload();
         videos_timeout = null;
     }, 200);
@@ -159,19 +158,19 @@ function videos_Submit(e)
     let url = form.attr('action');
 
     $.post(url, form.serialize())
-        .done(function(result) {
+        .done(result => {
             $("#videos-wrapper").html(result);
             $(".ajax-link").on("click", ajaxLink_Clicked);
             $(".btn-paging").on("click", videos_PageClicked);
         })
-        .fail(function() {
+        .fail(() => {
             $("#videos-wrapper").html('<div class="alert alert-danger">An error occurred while retrieving the video list!</div>');
         })
-        .always(function() {
+        .always(() => {
             loadingDiv.fadeOut(100);
         });
 
-    if (e != null)
+    if (e !== null)
         e.preventDefault();
 }
 
@@ -184,7 +183,7 @@ const JOB_QUERY_INTERVAL = 1500;
 function get_and_process_running_jobs()
 {
     $.get("{% url 'ajax_get_running_jobs' %}")
-        .done(function(data) {
+        .done(data => {
 
             let progress = $('#status-progress');
             let jobPanel = $('#job_panel');
@@ -212,14 +211,14 @@ function get_and_process_running_jobs()
 
                 progress.removeClass('invisible');
                 let bar = progress.find('.progress-bar');
-                bar.width(percent + '%');
+                bar.width(`${percent}%`);
                 bar.text(`${percent.toFixed(0)}%`);
 
                 // Update entries in job list
                 jobTitle.removeClass('collapse');
                 jobTitleNoJobs.addClass('collapse');
 
-                data.sort(function (a, b) { return a.id - b.id });
+                data.sort((a, b) => a.id - b.id);
                 jobPanel.find('.job_entry').remove();
 
                 for (let entry of data) {
@@ -232,7 +231,7 @@ function get_and_process_running_jobs()
 
                     let entryPercent = 100 * entry.progress;
                     let jobEntryProgress = jobEntry.find('#job_panel_item_progress');
-                    jobEntryProgress.width(entryPercent + '%');
+                    jobEntryProgress.width(`${entryPercent}%`);
                     jobEntryProgress.text(`${entryPercent.toFixed(0)}%`);
 
                     jobEntry.appendTo(jobPanel);
@@ -256,25 +255,24 @@ function get_and_process_running_jobs()
 ///
 /// Initialization
 ///
-$(document).ready(function ()
-{
+$(document).ready(() => {
     // Initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
 
     tree_Initialize();
 
     // Subscription toolbar
-    $("#btn_create_sub").on("click", function () {
+    $("#btn_create_sub").on("click", () => {
         let modal = new AjaxModal("{% url 'modal_create_subscription' %}");
         modal.setSubmitCallback(tree_Refresh);
         modal.loadAndShow();
     });
-    $("#btn_create_folder").on("click", function () {
+    $("#btn_create_folder").on("click", () => {
         let modal = new AjaxModal("{% url 'modal_create_folder' %}");
         modal.setSubmitCallback(tree_Refresh);
         modal.loadAndShow();
     });
-    $("#btn_import").on("click", function () {
+    $("#btn_import").on("click", () => {
         let modal = new AjaxModal("{% url 'modal_import_subscriptions' %}");
         modal.setSubmitCallback(tree_Refresh);
         modal.loadAndShow();

@@ -5,10 +5,12 @@
 
 {% block scripts %}
     <script>
+
+    const loginRedirectDelay = 3000;
     
-    window.setTimeout(function(){
+    window.setTimeout(() => {
         window.location.href = "/";
-    }, 3000);
+    }, loginRedirectDelay);
     
     </script>
     

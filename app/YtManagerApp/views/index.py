@@ -15,6 +15,7 @@ from YtManagerApp.management.appconfig import appconfig
 from YtManagerApp.models import Subscription, SubscriptionFolder, VIDEO_ORDER_CHOICES, VIDEO_ORDER_MAPPING
 from YtManagerApp.utils import youtube, subscription_file_parser
 from YtManagerApp.views.controls.modal import ModalMixin
+from external.pytaw.pytaw.youtube import InvalidURL
 
 import logging
 
@@ -290,7 +291,7 @@ class CreateSubscriptionForm(forms.ModelForm):
         playlist_url: str = self.cleaned_data['playlist_url']
         try:
             parsed_url = self.yt_api.parse_url(playlist_url)
-        except youtube.InvalidURL as e:
+        except InvalidURL as e:
             raise forms.ValidationError(str(e))
 
         is_playlist = 'playlist' in parsed_url
@@ -311,7 +312,7 @@ class CreateSubscriptionModal(LoginRequiredMixin, ModalMixin, CreateView):
         api = youtube.YoutubeAPI.build_public()
         try:
             form.instance.fetch_from_url(form.cleaned_data['playlist_url'], api)
-        except youtube.InvalidURL as e:
+        except InvalidURL as e:
             return self.modal_response(form, False, str(e))
         except ValueError as e:
             return self.modal_response(form, False, str(e))

@@ -32,7 +32,7 @@ class ProgressTracker(object):
         self.total_steps = total_steps
         self.steps = initial_steps
 
-        self.__subtask: ProgressTracker = None
+        self.__subtask: Union[None, ProgressTracker] = None
         self.__subtask_steps = 0
 
         self.__parent = parent
@@ -130,7 +130,7 @@ class Job(object):
         """
         self.__progress_tracker.total_steps = steps
 
-    def progress_advance(self, steps: float = 1, progress_msg: str = ''):
+    def progress_advance(self, steps: float = 0, progress_msg: str = ''):
         """
         Advances a number of steps.
         :param steps: Number of steps to advance
@@ -231,7 +231,8 @@ class YtsmScheduler(object):
         }
         self._apscheduler.configure(logger=logger, executors=executors, job_defaults=job_defaults)
 
-    def _run_job(self, job_class: Type[Job], user: Optional[User], args: Union[tuple, list]):
+    @staticmethod
+    def _run_job(job_class: Type[Job], user: Optional[User], args: Union[tuple, list]):
 
         job_execution = JobExecution(user=user, status=JOB_STATES_MAP['running'])
         job_execution.save()
@@ -261,7 +262,7 @@ class YtsmScheduler(object):
         if args is None:
             args = []
 
-        return self._apscheduler.add_job(YtsmScheduler._run_job, trigger=trigger, args=[self, job_class, user, args],
+        return self._apscheduler.add_job(trigger=trigger, args=[self, job_class, user, args],
                                          **kwargs)
 
 

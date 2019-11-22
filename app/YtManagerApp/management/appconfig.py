@@ -29,7 +29,8 @@ class AppConfig(object):
         else:
             super().__setattr__(key, value)
 
-    def for_sub(self, subscription, pref: str):
+    @staticmethod
+    def for_sub(subscription, pref: str):
         value = getattr(subscription, pref)
         if value is None:
             value = subscription.user.preferences[pref]

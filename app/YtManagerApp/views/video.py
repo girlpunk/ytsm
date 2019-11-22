@@ -1,8 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpRequest, StreamingHttpResponse, FileResponse
-from django.urls import reverse, reverse_lazy
-from django.views import View
+from django.http import HttpRequest, FileResponse
 from django.views.generic import DetailView
 
 from YtManagerApp.models import Video
@@ -21,9 +19,10 @@ class VideoDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
+# noinspection PyUnusedLocal
 @login_required
 def video_detail_view(request: HttpRequest, pk):
-    video = Video.objects.get(id = pk)
+    video = Video.objects.get(id=pk)
     video_file, _ = video.find_video()
 
     f = open(video_file, 'rb')

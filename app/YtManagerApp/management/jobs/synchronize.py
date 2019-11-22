@@ -38,7 +38,8 @@ class SynchronizeJob(Job):
             return [self.__subscription]
         return Subscription.objects.all()
 
-    def get_videos_list(self, subs):
+    @staticmethod
+    def get_videos_list(subs):
         return Video.objects.filter(subscription__in=subs)
 
     def run(self):
@@ -82,7 +83,6 @@ class SynchronizeJob(Job):
                     if video.video_id in video_stats:
                         self.update_video_stats(video, video_stats[video.video_id])
 
-
             # Start downloading videos
             for sub in work_subs:
                 downloader_process_subscription(sub)
@@ -111,7 +111,8 @@ class SynchronizeJob(Job):
 
                 self.__new_vids.append(Video.create(item, sub))
 
-    def fetch_missing_thumbnails(self, obj: Union[Subscription, Video]):
+    @staticmethod
+    def fetch_missing_thumbnails(obj: Union[Subscription, Video]):
         if obj.thumbnail.startswith("http"):
             if isinstance(obj, Subscription):
                 obj.thumbnail = fetch_thumbnail(obj.thumbnail, 'sub', obj.playlist_id, settings.THUMBNAIL_SIZE_SUBSCRIPTION)
@@ -139,7 +140,7 @@ class SynchronizeJob(Job):
 
             # Video not found, we can safely assume that the video was deleted.
             if not found_video:
-                self.log.info("Video %d was deleted! [%s %s]", video.id, video.video_id, video.name)
+                self.log.info("Video %d was deleted! [%s %s]", video.pk, video.video_id, video.name)
                 # Clean up
                 for file in files:
                     try:
@@ -156,7 +157,8 @@ class SynchronizeJob(Job):
 
                 video.save()
 
-    def update_video_stats(self, video: Video, yt_video):
+    @staticmethod
+    def update_video_stats(video: Video, yt_video):
         if yt_video.n_likes is not None \
                 and yt_video.n_dislikes is not None \
                 and yt_video.n_likes + yt_video.n_dislikes > 0:

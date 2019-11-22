@@ -56,10 +56,7 @@ class LoginForm(ExtendedAuthenticationForm):
 
 
 class PickAdminUserForm(forms.Form):
-    admin_user = forms.ModelChoiceField(
-            User.objects.order_by('username'),
-            label='User to promote to admin',
-            required=True)
+    admin_user = forms.ModelChoiceField(User.objects.order_by('username'), label='User to promote to admin')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

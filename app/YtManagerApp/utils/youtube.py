@@ -1,6 +1,6 @@
-from django.conf import settings
-from external.pytaw.pytaw.youtube import YouTube, Channel, Playlist, PlaylistItem, Thumbnail, InvalidURL, Resource, Video
 from typing import Optional
+
+from external.pytaw.pytaw.youtube import YouTube, Thumbnail, Resource
 
 
 class YoutubeAPI(YouTube):

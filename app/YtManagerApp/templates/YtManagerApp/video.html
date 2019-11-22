@@ -38,9 +38,12 @@
                         <source src="{% url 'video-src' object.id %}" type="{{ video_mime }}">
                     </video>
                 {% else %}
-                    <iframe id="ytplayer" type="text/html" width="100%" height="600"
-                          src="https://www.youtube-nocookie.com/embed/{{ object.video_id }}?autoplay=1"
-                          frameborder="0"></iframe>
+                    <iframe
+                            id="ytplayer"
+                            width="100%"
+                            height="600"
+                            src="https://www.youtube-nocookie.com/embed/{{ object.video_id }}?autoplay=1"
+                            style="border: 0;"></iframe>
                 {% endif %}
             </div>
         </div>

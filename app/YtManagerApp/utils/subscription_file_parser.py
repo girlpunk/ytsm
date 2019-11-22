@@ -32,7 +32,8 @@ class SubscriptionListFileParser(SubFileParser):
     Comments are supported using # character.
     """
 
-    def __is_url(self, text: str) -> bool:
+    @staticmethod
+    def __is_url(text: str) -> bool:
         return text.startswith('http://') or text.startswith('https://')
 
     def probe(self, file_handle):
@@ -61,6 +62,7 @@ class OPMLParser(SubFileParser):
     """
     Parses OPML files (emitted by YouTube)
     """
+
     def __init__(self):
         self.__cached_file = None
         self.__cached_tree: Optional[ElementTree.ElementTree] = None

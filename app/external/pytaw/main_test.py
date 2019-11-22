@@ -1,4 +1,4 @@
-import pytaw
+from external.pytaw import pytaw
 
 yt = pytaw.YouTube(key='AIzaSyBabzE4Bup77WexdLMa9rN9z-wJidEfNX8')
 c = yt.channel('UCmmPgObSUPw1HL2lq6H4ffA')

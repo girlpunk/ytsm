@@ -45,6 +45,7 @@ class StarRatingNode(template.Node):
         return u"".join(html)
 
 
+# noinspection PyUnusedLocal
 @register.tag(name='starrating')
 def star_rating_tag(parser, token):
     """
@@ -58,4 +59,3 @@ def star_rating_tag(parser, token):
         return StarRatingNode(parts[1])
 
     return StarRatingNode(parts[1], parts[2])
-

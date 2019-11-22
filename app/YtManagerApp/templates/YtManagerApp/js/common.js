@@ -1,9 +1,10 @@
+
 function zeroFill(number, width) {
     width -= number.toString().length;
     if ( width > 0 ) {
-        return new Array( width + (/\./.test( number ) ? 2 : 1) ).join( '0' ) + number;
+        return new Array( width + (/\./.test( number ) ? 2 : 1) ).join( "0" ) + number;
     }
-    return number + ""; // always return a string
+    return String(number); // always return a string
 }
 
 class AjaxModal
@@ -32,12 +33,12 @@ class AjaxModal
     }
 
     _showModal() {
-        if (this.modal != null)
+        if (this.modal !== null)
             this.modal.modal();
     }
 
     _hideModal() {
-        if (this.modal != null)
+        if (this.modal !== null)
             this.modal.modal('hide');
     }
 
@@ -49,7 +50,7 @@ class AjaxModal
         this.modalLoadingRing = this.wrapper.find('#modal-loading-ring');
 
         let pThis = this;
-        this.form.submit(function(e) {
+        this.form.submit(e => {
             pThis._submit(e);
         })
     }
@@ -62,7 +63,7 @@ class AjaxModal
         let pThis = this;
         let url = this.form.attr('action');
         let ajax_settings = {
-            url: url,
+            url,
         };
 
         if (this.form.attr('enctype') === 'multipart/form-data') {
@@ -76,13 +77,13 @@ class AjaxModal
         }
 
         $.post(ajax_settings)
-            .done(function(result) {
+            .done(result => {
                 pThis._submitDone(result);
             })
-            .fail(function() {
+            .fail(() => {
                 pThis._submitFailed();
             })
-            .always(function() {
+            .always(() => {
                 pThis.modalLoadingRing.fadeOut(100);
                 pThis.wrapper.find(":input").prop("disabled", false);
             });
@@ -104,7 +105,7 @@ class AjaxModal
 
         if (result.success) {
             this._hideModal();
-            if (this.submitCallback != null)
+            if (this.submitCallback !== null)
                 this.submitCallback();
         }
         else {
@@ -162,14 +163,14 @@ class AjaxModal
         this._showLoading();
 
         $.get(this.url)
-            .done(function (result) {
+            .done(result => {
                 pThis._load(result);
                 pThis._showModal();
             })
-            .fail(function () {
+            .fail(() => {
                 pThis._loadFailed();
             })
-            .always(function() {
+            .always(() => {
                 pThis._hideLoading();
             });
     }
@@ -185,12 +186,12 @@ function ajaxLink_Clicked() {
     let url_post = $(this).data('post-url');
     let url_get = $(this).data('get-url');
 
-    if (url_post != null) {
+    if (url_post !== null) {
         $.post(url_post, {
             csrfmiddlewaretoken: '{{ csrf_token }}'
         });
     }
-    else if (url_get != null) {
+    else if (url_get !== null) {
         $.get(url_get, {
             csrfmiddlewaretoken: '{{ csrf_token }}'
         });
@@ -201,8 +202,7 @@ function ajaxLink_Clicked() {
 ///
 /// Initialization
 ///
-$(document).ready(function ()
-{
+$(document).ready(() => {
     $(".ajax-link").on("click", ajaxLink_Clicked);
     $("#btn_sync_now").on("click", syncNow);
 });

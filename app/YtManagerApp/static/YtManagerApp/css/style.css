@@ -26,7 +26,7 @@
     height: 46px;
     margin: 1px;
     border-radius: 50%;
-    border: 5px solid #007bff;
+    border: 5px solid;
     border-color: #007bff transparent #007bff transparent;
     animation: loading-dual-ring 1.2s linear infinite; }
 
@@ -41,7 +41,7 @@
     height: 23px;
     margin: 1px;
     border-radius: 50%;
-    border: 2.5px solid #007bff;
+    border: 2.5px solid;
     border-color: #007bff transparent #007bff transparent;
     animation: loading-dual-ring 1.2s linear infinite; }
 

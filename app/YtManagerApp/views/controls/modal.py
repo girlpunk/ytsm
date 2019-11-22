@@ -35,7 +35,8 @@ class ModalMixin(ContextMixin):
 
         return data
 
-    def modal_response(self, form, success=True, error_msg=None):
+    @staticmethod
+    def modal_response(form, success=True, error_msg=None):
         result = {'success': success}
         if not success:
             result['errors'] = form.errors.get_json_data(escape_html=True)
@@ -46,7 +47,7 @@ class ModalMixin(ContextMixin):
 
     def form_valid(self, form):
         super().form_valid(form)
-        return self.modal_response(form, success=True)
+        return self.modal_response(form)
 
     def form_invalid(self, form):
         super().form_invalid(form)

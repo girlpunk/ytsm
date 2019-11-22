@@ -39,4 +39,3 @@ def ajax_get_running_jobs(request: HttpRequest):
         })
 
     return JsonResponse(response, safe=False)
-
