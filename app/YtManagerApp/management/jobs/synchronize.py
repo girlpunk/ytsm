@@ -16,7 +16,7 @@ from YtManagerApp.scheduler import scheduler, Job
 from YtManagerApp.utils import youtube
 from external.pytaw.pytaw.utils import iterate_chunks
 
-_ENABLE_UPDATE_STATS = True
+_ENABLE_UPDATE_STATS = False
 
 
 class SynchronizeJob(Job):
