@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -172,6 +173,8 @@ CFG_PARSER_OPTS = {
     'CONFIG_DIR': CONFIG_DIR,
     'DATA_DIR': DATA_DIR,
 }
+
+ASGI_APPLICATION = 'YtManager.routing.application'
 
 
 #

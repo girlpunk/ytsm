@@ -207,73 +207,101 @@ const JOB_QUERY_INTERVAL = 1500;
 function get_and_process_running_jobs()
 {
     $.get("{% url 'ajax_get_running_jobs' %}")
-        .done(function(data) {
+        .done(process_job_data);
+}
 
-            let progress = $('#status-progress');
-            let jobPanel = $('#job_panel');
-            let jobTitle = jobPanel.find('#job_panel_title');
-            let jobTitleNoJobs = jobPanel.find('#job_panel_no_jobs_title');
-            let jobTemplate = jobPanel.find('#job_panel_item_template');
 
-            if (data.length > 0) {
+function process_job_data(data) {
+    let progress = $('#status-progress');
+    let jobPanel = $('#job_panel');
+    let jobTitle = jobPanel.find('#job_panel_title');
+    let jobTitleNoJobs = jobPanel.find('#job_panel_no_jobs_title');
+    let jobTemplate = jobPanel.find('#job_panel_item_template');
 
-                // Update status bar
-                if (data.length > 1) {
-                    $('#status-message').text(`Running ${data.length} jobs...`);
-                }
-                else {
-                    $('#status-message').text(`${data[0].description} | ${data[0].message}`);
-                }
+    if (data.length > 0) {
+        // Update status bar
+        if (data.length > 1) {
+            $('#status-message').text(`Running ${data.length} jobs...`);
+        }
+        else {
+            $('#status-message').text(`${data[0].description} | ${data[0].message}`);
+        }
 
-                // Update global progress bar
-                let combinedProgress = 0;
-                for (let entry of data) {
-                    combinedProgress += entry.progress;
-                }
+        // Update global progress bar
+        let combinedProgress = 0;
+        for (let entry of data) {
+            combinedProgress += entry.progress;
+        }
 
-                let percent = 100 * combinedProgress / data.length;
+        let percent = 100 * combinedProgress / data.length;
 
-                progress.removeClass('invisible');
-                let bar = progress.find('.progress-bar');
-                bar.width(percent + '%');
-                bar.text(`${percent.toFixed(0)}%`);
+        progress.removeClass('invisible');
+        let bar = progress.find('.progress-bar');
+        bar.width(percent + '%');
+        bar.text(`${percent.toFixed(0)}%`);
 
-                // Update entries in job list
-                jobTitle.removeClass('collapse');
-                jobTitleNoJobs.addClass('collapse');
+        // Update entries in job list
+        jobTitle.removeClass('collapse');
+        jobTitleNoJobs.addClass('collapse');
 
-                data.sort(function (a, b) { return a.id - b.id });
-                jobPanel.find('.job_entry').remove();
+        data.sort(function (a, b) { return a.id - b.id });
+        jobPanel.find('.job_entry').remove();
 
-                for (let entry of data) {
-                    let jobEntry = jobTemplate.clone();
-                    jobEntry.attr('id', `job_${entry.id}`);
-                    jobEntry.addClass('job_entry');
-                    jobEntry.removeClass('collapse');
-                    jobEntry.find('#job_panel_item_title').text(entry.description);
-                    jobEntry.find('#job_panel_item_subtitle').text(entry.message);
+        for (let entry of data) {
+            let jobEntry = jobTemplate.clone();
+            jobEntry.attr('id', `job_${entry.id}`);
+            jobEntry.addClass('job_entry');
+            jobEntry.removeClass('collapse');
+            jobEntry.find('#job_panel_item_title').text(entry.description);
+            jobEntry.find('#job_panel_item_subtitle').text(entry.message);
 
-                    let entryPercent = 100 * entry.progress;
-                    let jobEntryProgress = jobEntry.find('#job_panel_item_progress');
-                    jobEntryProgress.width(entryPercent + '%');
-                    jobEntryProgress.text(`${entryPercent.toFixed(0)}%`);
+            let entryPercent = 100 * entry.progress;
+            let jobEntryProgress = jobEntry.find('#job_panel_item_progress');
+            jobEntryProgress.width(entryPercent + '%');
+            jobEntryProgress.text(`${entryPercent.toFixed(0)}%`);
 
-                    jobEntry.appendTo(jobPanel);
-                }
+            jobEntry.appendTo(jobPanel);
+        }
 
-                $('#btn_toggle_job_panel').dropdown('update');
-            }
-            else {
-                progress.addClass('invisible');
-                $('#status-message').text("");
+        $('#btn_toggle_job_panel').dropdown('update');
+    }
+    else {
+        progress.addClass('invisible');
+        $('#status-message').text("");
 
-                jobTitle.addClass('collapse');
-                jobTitleNoJobs.removeClass('collapse');
-                jobPanel.find('.job_entry').remove();
+        jobTitle.addClass('collapse');
+        jobTitleNoJobs.removeClass('collapse');
+        jobPanel.find('.job_entry').remove();
 
-                $('#btn_toggle_job_panel').dropdown('update');
-            }
-        });
+        $('#btn_toggle_job_panel').dropdown('update');
+    }
+}
+
+function connectSockets() {
+    var eventSocket = new WebSocket(
+        'wss://' + window.location.host +
+        '/ytsm/ws/events/');
+
+    eventSocket.onmessage = function(e) {
+        var data = JSON.parse(e.data);
+
+        if(data["request"] === "jobs") {
+            process_job_data(data["data"]);
+        }
+    };
+
+    eventSocket.onclose = function(e) {
+        console.error('Event socket closed unexpectedly');
+
+        // Fallback to polling
+        setInterval(get_and_process_running_jobs, JOB_QUERY_INTERVAL);
+    };
+
+    setInterval(function() {
+        eventSocket.send(JSON.stringify({
+            'request': 'jobs'
+        }));
+    }, JOB_QUERY_INTERVAL);
 }
 
 
@@ -286,7 +314,5 @@ $(document).ready(function ()
     $("#btn_sync_now").on("click", syncNow);
     $('[data-toggle="tooltip"]').tooltip()
 
-    // Notifications
-    get_and_process_running_jobs();
-    setInterval(get_and_process_running_jobs, JOB_QUERY_INTERVAL);
+    connectSockets();
 });
