@@ -204,6 +204,43 @@ function videos_Submit(e)
         e.preventDefault();
 }
 
+function videos_markallwatched(btn)
+{
+    $(btn)[0].innerHTML="<span class='typcn typcn-arrow-sync'></span>";
+
+    var urls = [];
+
+    $(".video").each(function () {
+        urls.push($(this).data('video-id'));
+    });
+
+    $.post({
+        url: "/ytsm/ajax/action/mark_video_watched/"+urls.join(),
+        data: {csrfmiddlewaretoken: '{{ csrf_token }}'},
+        complete : function () {
+            if(urls.length > 0) {
+                do_ajax();
+            } else {
+                $(btn)[0].innerHTML="Done";
+            }
+        }
+    })
+}
+
+function video_markwatched(btn) {
+    let url_post = $(btn).data('url');
+
+    $.post(url_post, {
+        csrfmiddlewaretoken: '{{ csrf_token }}'
+    },
+    function() {
+        //TODO: Check view mode before fading out element
+        $(btn).closest(".video").fadeOut().toggleClass('d-flex');
+    });
+
+    return false;
+}
+
 ///
 /// Initialization
 ///

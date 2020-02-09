@@ -37,8 +37,13 @@ class DownloadVideoFilesView(LoginRequiredMixin, View):
 
 class MarkVideoWatchedView(LoginRequiredMixin, View):
     def post(self, *args, **kwargs):
-        video = Video.objects.get(id=kwargs['pk'])
-        video.mark_watched()
+        videos = Video.objects.filter(id__in=kwargs['pk'].split(","))
+        videos.update(watched=True)
+
+        for video in videos:
+            video.mark_watched()
+            video.save()
+
         return JsonResponse({
             'success': True
         })

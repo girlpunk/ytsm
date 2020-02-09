@@ -3,7 +3,8 @@
 
 {% if videos %}
 <div class="row">
-	<a class="btn" href="{% url 'video' videos.0.id %}?next={% for video in videos|slice:"1:" %}{{video.id}}{% if not forloop.last %},{% endif %}{% endfor %}">Watch All</a>
+	<a class="btn btn-secondary" href="{% url 'video' videos.0.id %}?next={% for video in videos|slice:"1:" %}{{video.id}}{% if not forloop.last %},{% endif %}{% endfor %}">Watch All Now</a>&nbsp;
+        <a class="btn btn-secondary" onclick="videos_markallwatched(this)" href="#">Mark All as Watched</a>
 </div>
 {% endif %}
 
