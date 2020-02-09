@@ -47,6 +47,10 @@
                     height: '100%',
                     width: '100%',
                     videoId: '{{ object.video_id }}',
+                    playerVars: {
+                        origin: window.location,
+                        autoplay: 1,
+                    },
                     events: {
                         'onReady': onPlayerReady,
                         'onStateChange': onPlayerStateChange
@@ -63,8 +67,45 @@
                 if (event.data == YT.PlayerState.ENDED) {
                     console.log("Video finished!");
                     setWatchedStatus(1);
+                } else if (event.data == YT.PlayerState.UNSTARTED) {
+                    player.playVideo();
                 }
             }
+
+            function isFullScreen() {
+                return (window.fullScreen) || (window.innerWidth == screen.width && window.innerHeight == screen.height);
+            }
+
+            $(window).on('resize', function() {
+                var container = $("#ytplayer");
+                var parent = container.parent();
+
+                if (isFullScreen()) {
+                    container.css("position", "absolute");
+                    container.css("top", "0");
+                    container.css("left", "0");
+
+                    container.css("width", "100vw");
+                    container.css("height", "100vh");
+
+                    parent.css("position", "absolute");
+                    parent.css("top", "0");
+                    parent.css("left", "0");
+
+                    parent.css("z-index", "1");
+                } else {
+                    // fullscreen is cancelled
+                    container.css("position", "static");
+                    container.css("width", "100%");
+                    container.css("height", "80vh");
+        	
+                    parent.css("position", "relative");
+                }
+            });
+
+            var evt = document.createEvent("HTMLEvents");
+            evt.initEvent("resize", false, true);
+            window.dispatchEvent(evt);
         </script>
 
         <script src="//www.youtube.com/iframe_api"></script>
