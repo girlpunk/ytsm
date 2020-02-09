@@ -11,7 +11,7 @@
 <div class="video-gallery container-fluid">
     <div class="row">
         {% for video in videos %}
-            <div class="card-wrapper d-flex align-items-stretch" style="width: 18rem;">
+            <div class="card-wrapper d-flex align-items-stretch video" data-video-id="{{ video.id }}" style="width: 18rem;">
                 <div class="card mx-auto">
                     <a href="{% url 'video' video.id %}" target="_blank">
                         <div>
@@ -42,7 +42,7 @@
                                         Mark not watched
                                     </a>
                                 {% else %}
-                                    <a class="dropdown-item ajax-link" href="#" data-post-url="{% url 'ajax_action_mark_video_watched' video.id %}">
+                                    <a class="dropdown-item ajax-link" href="#" data-url="{% url 'ajax_action_mark_video_watched' video.id %}" onclick="video_markwatched(this)">
                                         Mark watched
                                     </a>
                                 {% endif %}
