@@ -1,3 +1,4 @@
+from math import log, floor
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Field, HTML
 from django import forms
@@ -129,23 +130,37 @@ def index(request: HttpRequest):
 
 @login_required
 def ajax_get_tree(request: HttpRequest):
+    def human_format(number):
+        units = ['', 'K', 'M', 'G', 'T', 'P']
+        k = 1000.0
+        magnitude = int(floor(log(number, k)))
+        if magnitude > 0:
+            return '{0:.2}{1:s}'.format(number / k**magnitude, units[magnitude])
+        else:
+            return '{0}'.format(number)
 
     def visit(node):
         if isinstance(node, SubscriptionFolder):
+            unwatched = node.getUnwatchedCount()
             return {
                 "id": __tree_folder_id(node.id),
                 "text": node.name,
                 "type": "folder",
                 "state": {"opened": True},
-                "parent": __tree_folder_id(node.parent_id)
+                "parent": __tree_folder_id(node.parent_id),
+                "li_attr": {"data-unwatched-count": unwatched}
             }
+
+            return data
         elif isinstance(node, Subscription):
+            unwatched = node.getUnwatchedCount()
             return {
                 "id": __tree_sub_id(node.id),
                 "type": "sub",
                 "text": node.name,
                 "icon": node.thumbnail,
-                "parent": __tree_folder_id(node.parent_folder_id)
+                "parent": __tree_folder_id(node.parent_folder_id),
+                "li_attr": {"data-unwatched-count": unwatched}
             }
 
     result = SubscriptionFolder.traverse(None, request.user, visit)

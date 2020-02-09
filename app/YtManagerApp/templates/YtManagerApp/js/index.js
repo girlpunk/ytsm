@@ -67,6 +67,35 @@ function tree_Initialize()
         plugins : [ "types", "wholerow", "dnd" ]
     });
     treeWrapper.on("changed.jstree", tree_OnSelectionChanged);
+    treeWrapper.on("ready.jstree", tree_Ready);
+}
+
+function tree_Ready(e, data) {
+    $(this)
+        .find("li")
+        .filter(function(){
+            return $(this).data("unwatched-count")>0
+        })
+        .each(function(){
+            var i = $(this);
+            document.styleSheets[0].addRule(
+                '#'+i.attr('id')+' > i:after',
+                `
+                    position: absolute;
+                    right: 0%;
+                    top: 1%;
+                    content: "${i.data("unwatched-count")}";
+                    font-size: 60%;
+                    padding: .6em;
+                    border-radius: 999px;
+                    line-height: .75em;
+                    color: white;
+                    background: rgba(255,0,0,.85);
+                    text-align: center;
+                    min-width:2em;
+                    font-weight:bold;
+                `);
+        });
 }
 
 function tree_Refresh()

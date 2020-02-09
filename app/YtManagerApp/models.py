@@ -50,6 +50,14 @@ class SubscriptionFolder(models.Model):
     def __repr__(self):
         return f'folder {self.id}, name="{self.name}"'
 
+    def getUnwatchedCount(self):
+        def count(node: Union["SubscriptionFolder", "Subscription"]):
+            if node.pk != self.pk:
+                return node.getUnwatchedCount()
+
+        return sum(SubscriptionFolder.traverse(self.id, self.user, count))
+
+
     def delete_folder(self, keep_subscriptions: bool):
         if keep_subscriptions:
 
@@ -166,6 +174,9 @@ class Subscription(models.Model):
     def synchronize_now(self):
         from YtManagerApp.management.jobs.synchronize import SynchronizeJob
         SynchronizeJob.schedule_now_for_subscription(self)
+
+    def getUnwatchedCount(self):
+        return Video.objects.filter(subscription=self, watched=False).count()
 
 
 class Video(models.Model):
