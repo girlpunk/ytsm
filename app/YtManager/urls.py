@@ -20,5 +20,5 @@ from django.urls import path
 
 urlpatterns = [
     path(settings.URL_BASE+'admin/', admin.site.urls),
-    path(settings.URL_BASE+'/', include('YtManagerApp.urls')),
+    path(settings.URL_BASE, include('YtManagerApp.urls')),
 ]
