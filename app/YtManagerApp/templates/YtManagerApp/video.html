@@ -110,42 +110,41 @@
 
         <script src="//www.youtube.com/iframe_api"></script>
     {% endif %}
-{% endblock scripts%}
+{% endblock scripts %}
+
+{% block navbarcontent %}
+    <h2>{{ object.name }}</h2>
+{% endblock %}
+
+{% block navbarsupportedcontent %}
+    <a class="btn btn-secondary nav-item" data-toggle="tooltip" href="https://youtube.com/watch?v={{ object.video_id }}" title="Watch on YouTube" style="margin: 0 3px;"><span class="typcn typcn-social-youtube"></span></a>
+    {% if object.watched %}
+        <a id="watchButton" class="btn btn-secondary nav-item" onclick="setWatchedStatus(0)" title="Mark not watched" data-toggle="tooltip" href="#" style="margin: 0 3px;">
+            <span class="typcn typcn-eye" style="color:lightgreen;"></span>
+        </a>
+    {% else %}
+        <a id="watchButton" class="btn btn-secondary nav-item" onclick="setWatchedStatus(1)" title="Mark watched" data-toggle="tooltip" href="#" style="margin: 0 3px;">
+            <span class="typcn typcn-eye-outline"></span>
+        </a>
+    {% endif %}
+    <a id="nextButton" class="btn btn-secondary nav-item" onclick="goNextVideo()" title="Go to Next Video" data-toggle="tooltip" href="#" style="margin: 0 3px;">
+        <span class="typcn typcn-media-fast-forward"></span>
+    </a>
+    {% if object.downloaded_path %}
+        <a class="btn btn-secondary ajax-link nav-item" href="#" data-post-url="{% url 'ajax_action_delete_video_files' object.id %}" title="Delete downloaded" data-toggle="tooltip" style="margin: 0 3px;">
+            <span class="typcn typcn-download" style="color:lightgreen;"></span>
+        </a>
+    {% else %}
+        <a class="btn btn-secondary ajax-link nav-item" href="#" data-post-url="{% url 'ajax_action_download_video_files' object.id %}" title="Download" data-toggle="tooltip" style="margin: 0 3px;">
+            <span class="typcn typcn-download-outline"></span>
+        </a>
+    {% endif %}
+    {% if up_next_count %}
+        <span class="btn btn-secondary ajax-link nav-item" style="margin: 0 3px;">{{ up_next_count }}, {{ up_next_duration }}</span>
+    {% endif %}
+{% endblock %}
 
 {% block body %}
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-9">
-                <h2>{{ object.name }}</h2>
-            </div>
-            <div class="col-3">
-                <a class="btn btn-secondary" data-toggle="tooltip" href="https://youtube.com/watch?v={{ object.video_id }}" title="Watch on YouTube"><span class="typcn typcn-social-youtube"></span></a>
-                {% if object.watched %}
-                    <a id="watchButton" class="btn btn-secondary" onclick="setWatchedStatus(0)" title="Mark not watched" data-toggle="tooltip" href="#">
-                        <span class="typcn typcn-eye" style="color:lightgreen;"></span>
-                    </a>
-                {% else %}
-                    <a id="watchButton" class="btn btn-secondary" onclick="setWatchedStatus(1)" title="Mark watched" data-toggle="tooltip" href="#">
-                        <span class="typcn typcn-eye-outline"></span>
-                    </a>
-                {% endif %}
-                {% if object.downloaded_path %}
-                    <a class="btn btn-secondary ajax-link" href="#" data-post-url="{% url 'ajax_action_delete_video_files' object.id %}" title="Delete downloaded" data-toggle="tooltip">
-                        <span class="typcn typcn-download" style="color:lightgreen;"></span>
-                    </a>
-                {% else %}
-                    <a class="btn btn-secondary ajax-link" href="#" data-post-url="{% url 'ajax_action_download_video_files' object.id %}" title="Download" data-toggle="tooltip">
-                        <span class="typcn typcn-download-outline"></span>
-                    </a>
-                {% endif %}
-                {% if up_next_count %}
-                    <span class="btn btn-secondary ajax-link">{{ up_next_count }}, {{ up_next_duration }}</span>
-                {% endif %}
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-12">
-                {% if video_mime != None %}
                     <video width="100%" height="600px" controls autoplay>
                         <source src="{% url 'video-src' object.id %}" type="{{ video_mime }}">
                     </video>

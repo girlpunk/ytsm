@@ -23,8 +23,14 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
 
+            {% block navbarcontent %}
+            {% endblock %}
+
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav ml-auto">
+                    {% block navbarsupportedcontent %}
+                    {% endblock %}
+
                     {% if request.user.is_authenticated %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
