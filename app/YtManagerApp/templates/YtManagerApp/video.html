@@ -15,16 +15,7 @@
                     $("#watchButton").attr("title", "Mark as not watched");
                     $("#watchButton").attr("onclick","setWatchedStatus(0)");
 
-                    var urlParams = new URLSearchParams(window.location.search);
-                    if(urlParams.has("next")) {
-                        var videos = urlParams.get("next");
-                        if(videos == "") {return;}
-                        videos = videos.split(",");
-                        var next = videos.shift();
-
-                        //TODO: Don't really like the URL construction here
-                        window.location.href = "{% url 'video' 0 %}".replace("0", next)+"?next="+videos.join(",");
-                    }
+                    goNextVideo();
                 });
             } else {
                 $.post("{% url 'ajax_action_mark_video_unwatched' object.id %}", {
@@ -34,6 +25,19 @@
                     $("#watchButton").attr("title", "Mark as watched");
                     $("#watchButton").attr("onclick","setWatchedStatus(0)");
                 });
+            }
+        }
+
+        function goNextVideo() {
+            var urlParams = new URLSearchParams(window.location.search);
+            if(urlParams.has("next")) {
+                var videos = urlParams.get("next");
+                if(videos == "") {return;}
+                videos = videos.split(",");
+                var next = videos.shift();
+
+                //TODO: Don't really like the URL construction here
+                window.location.href = "{% url 'video' 0 %}".replace("0", next)+"?next="+videos.join(",");
             }
         }
     </script>
