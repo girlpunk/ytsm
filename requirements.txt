@@ -13,3 +13,7 @@ oauth2client
 psycopg2-binary
 python-dateutil
 Pillow
+channels
+celery
+django-celery-results
+celery[redis]

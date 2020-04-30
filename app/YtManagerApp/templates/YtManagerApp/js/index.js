@@ -67,6 +67,35 @@ function tree_Initialize()
         plugins : [ "types", "wholerow", "dnd" ]
     });
     treeWrapper.on("changed.jstree", tree_OnSelectionChanged);
+    treeWrapper.on("ready.jstree", tree_Ready);
+}
+
+function tree_Ready(e, data) {
+    $(this)
+        .find("li")
+        .filter(function(){
+            return $(this).data("unwatched-count")>0
+        })
+        .each(function(){
+            var i = $(this);
+            document.styleSheets[0].addRule(
+                '#'+i.attr('id')+' > i:after',
+                `
+                    position: absolute;
+                    right: 0%;
+                    top: 1%;
+                    content: "${i.data("unwatched-count")}";
+                    font-size: 60%;
+                    padding: .6em;
+                    border-radius: 999px;
+                    line-height: .75em;
+                    color: white;
+                    background: rgba(255,0,0,.85);
+                    text-align: center;
+                    min-width:2em;
+                    font-weight:bold;
+                `);
+        });
 }
 
 function tree_Refresh()
@@ -174,82 +203,37 @@ function videos_Submit(e)
         e.preventDefault();
 }
 
-///
-/// Notifications
-///
-const JOB_QUERY_INTERVAL = 1500;
-
-
-function get_and_process_running_jobs()
+function videos_markallwatched(btn)
 {
-    $.get("{% url 'ajax_get_running_jobs' %}")
-        .done(data => {
+    $(btn)[0].innerHTML="<span class='typcn typcn-arrow-sync'></span>";
 
-            let progress = $('#status-progress');
-            let jobPanel = $('#job_panel');
-            let jobTitle = jobPanel.find('#job_panel_title');
-            let jobTitleNoJobs = jobPanel.find('#job_panel_no_jobs_title');
-            let jobTemplate = jobPanel.find('#job_panel_item_template');
+    var urls = [];
 
-            if (data.length > 0) {
+    $(".video").each(function () {
+        urls.push($(this).data('video-id'));
+    });
 
-                // Update status bar
-                if (data.length > 1) {
-                    $('#status-message').text(`Running ${data.length} jobs...`);
-                }
-                else {
-                    $('#status-message').text(`${data[0].description} | ${data[0].message}`);
-                }
+    $.post({
+        url: "/ytsm/ajax/action/mark_video_watched/"+urls.join(),
+        data: {csrfmiddlewaretoken: '{{ csrf_token }}'},
+        complete : function () {
+            $(btn)[0].innerHTML="Done";
+        }
+    })
+}
 
-                // Update global progress bar
-                let combinedProgress = 0;
-                for (let entry of data) {
-                    combinedProgress += entry.progress;
-                }
+function video_markwatched(btn) {
+    let url_post = $(btn).data('url');
 
-                let percent = 100 * combinedProgress / data.length;
+    $.post(url_post, {
+        csrfmiddlewaretoken: '{{ csrf_token }}'
+    },
+    function() {
+        //TODO: Check view mode before fading out element
+        $(btn).closest(".video").fadeOut().toggleClass('d-flex');
+    });
 
-                progress.removeClass('invisible');
-                let bar = progress.find('.progress-bar');
-                bar.width(`${percent}%`);
-                bar.text(`${percent.toFixed(0)}%`);
-
-                // Update entries in job list
-                jobTitle.removeClass('collapse');
-                jobTitleNoJobs.addClass('collapse');
-
-                data.sort((a, b) => a.id - b.id);
-                jobPanel.find('.job_entry').remove();
-
-                for (let entry of data) {
-                    let jobEntry = jobTemplate.clone();
-                    jobEntry.attr('id', `job_${entry.id}`);
-                    jobEntry.addClass('job_entry');
-                    jobEntry.removeClass('collapse');
-                    jobEntry.find('#job_panel_item_title').text(entry.description);
-                    jobEntry.find('#job_panel_item_subtitle').text(entry.message);
-
-                    let entryPercent = 100 * entry.progress;
-                    let jobEntryProgress = jobEntry.find('#job_panel_item_progress');
-                    jobEntryProgress.width(`${entryPercent}%`);
-                    jobEntryProgress.text(`${entryPercent.toFixed(0)}%`);
-
-                    jobEntry.appendTo(jobPanel);
-                }
-
-                $('#btn_toggle_job_panel').dropdown('update');
-            }
-            else {
-                progress.addClass('invisible');
-                $('#status-message').text("");
-
-                jobTitle.addClass('collapse');
-                jobTitleNoJobs.removeClass('collapse');
-                jobPanel.find('.job_entry').remove();
-
-                $('#btn_toggle_job_panel').dropdown('update');
-            }
-        });
+    return false;
 }
 
 ///
@@ -290,8 +274,4 @@ $(document).ready(() => {
     filters_form.find('select[name=results_per_page]').on('change', videos_ResetPageAndReloadWithTimer);
 
     videos_Reload();
-
-    // Notifications
-    get_and_process_running_jobs();
-    setInterval(get_and_process_running_jobs, JOB_QUERY_INTERVAL);
 });

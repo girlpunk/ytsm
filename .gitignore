@@ -128,3 +128,10 @@ data/
 # Dolphin generated file
 .directory
 
+Pipfile 
+Pipfile.lock
+app/data
+log
+media
+static
+

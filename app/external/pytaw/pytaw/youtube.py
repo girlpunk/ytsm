@@ -19,7 +19,6 @@ from .utils import (
 )
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
 
 
 class DataMissing(Exception):

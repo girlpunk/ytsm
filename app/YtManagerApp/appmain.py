@@ -8,7 +8,7 @@ from django.conf import settings as dj_settings
 from .management.appconfig import appconfig
 from .management.jobs.synchronize import SynchronizeJob
 from .scheduler import scheduler
-from django.db.utils import OperationalError
+from django.db.utils import OperationalError, ProgrammingError
 
 
 def __initialize_logger():
@@ -39,7 +39,7 @@ def main():
         if appconfig.initialized:
             scheduler.initialize()
             SynchronizeJob.schedule_global_job()
-    except OperationalError:
+    except (OperationalError, ProgrammingError):
         # Settings table is not created when running migrate or makemigrations;
         # Just don't do anything in this case.
         pass

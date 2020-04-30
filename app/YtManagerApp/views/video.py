@@ -2,9 +2,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpRequest, FileResponse
 from django.views.generic import DetailView
+from django.db.models import Sum
 
 from YtManagerApp.models import Video
 
+import datetime
 
 class VideoDetailView(LoginRequiredMixin, DetailView):
     template_name = 'YtManagerApp/video.html'
@@ -15,6 +17,11 @@ class VideoDetailView(LoginRequiredMixin, DetailView):
         video, mime = self.object.find_video()
         if video is not None:
             context['video_mime'] = mime
+
+        if self.request.GET.get('next'):
+            up_next_videos = self.request.GET.get('next').split(',')
+            context['up_next_count'] = len(up_next_videos)
+            context['up_next_duration'] = str(datetime.timedelta(seconds=Video.objects.filter(id__in=up_next_videos).aggregate(Sum('duration'))['duration__sum']))
 
         return context
 

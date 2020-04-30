@@ -51,6 +51,14 @@ class SubscriptionFolder(models.Model):
     def __repr__(self):
         return f'folder {self.id}, name="{self.name}"'
 
+    def getUnwatchedCount(self):
+        def count(node: Union["SubscriptionFolder", "Subscription"]):
+            if node.pk != self.pk:
+                return node.getUnwatchedCount()
+
+        return sum(SubscriptionFolder.traverse(self.id, self.user, count))
+
+
     def delete_folder(self, keep_subscriptions: bool):
         if keep_subscriptions:
 
@@ -110,7 +118,8 @@ class Subscription(models.Model):
     thumbnail = models.CharField(max_length=1024)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     # youtube adds videos to the 'Uploads' playlist at the top instead of the bottom
-    rewrite_playlist_indices = models.BooleanField(default=False)
+    rewrite_playlist_indices = models.BooleanField(null=False, default=False)
+    last_synchronised = models.DateTimeField(null=True, blank=True)
 
     # overrides
     auto_download = models.BooleanField(null=True, blank=True)
@@ -163,6 +172,13 @@ class Subscription(models.Model):
     def delete_subscription(self, keep_downloaded_videos: bool):
         self.delete()
 
+    def synchronize_now(self):
+        from YtManagerApp.management.jobs.synchronize import SynchronizeJob
+        SynchronizeJob.schedule_now_for_subscription(self)
+
+    def getUnwatchedCount(self):
+        return Video.objects.filter(subscription=self, watched=False).count()
+
 
 class Video(models.Model):
     video_id = models.CharField(null=False, max_length=12)
@@ -176,8 +192,9 @@ class Video(models.Model):
     publish_date = models.DateTimeField(null=False)
     thumbnail = models.TextField()
     uploader_name = models.CharField(null=False, max_length=255)
-    views = models.IntegerField(default=0)
-    rating = models.FloatField(default=0.5)
+    views = models.IntegerField(null=False, default=0)
+    rating = models.FloatField(null=False, default=0.5)
+    duration = models.IntegerField(null=False, default=0)
 
     @staticmethod
     def create(playlist_item: PlaylistItem, subscription: Subscription):

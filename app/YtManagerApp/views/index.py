@@ -1,3 +1,4 @@
+from math import log, floor
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Field, HTML
 from django import forms
@@ -47,8 +48,8 @@ class VideoFilterForm(forms.Form):
     )
 
     query = forms.CharField(label='', required=False)
-    sort = forms.ChoiceField(label='Sort:', choices=VIDEO_ORDER_CHOICES, initial='newest')
-    show_watched = forms.ChoiceField(label='Show only: ', choices=CHOICES_SHOW_WATCHED, initial='all')
+    sort = forms.ChoiceField(label='Sort:', choices=VIDEO_ORDER_CHOICES, initial='oldest')
+    show_watched = forms.ChoiceField(label='Show only: ', choices=CHOICES_SHOW_WATCHED, initial='n')
     show_downloaded = forms.ChoiceField(label='', choices=CHOICES_SHOW_DOWNLOADED, initial='all')
     subscription_id = forms.IntegerField(
         required=False,
@@ -130,23 +131,37 @@ def index(request: HttpRequest):
 
 @login_required
 def ajax_get_tree(request: HttpRequest):
+    def human_format(number):
+        units = ['', 'K', 'M', 'G', 'T', 'P']
+        k = 1000.0
+        magnitude = int(floor(log(number, k)))
+        if magnitude > 0:
+            return '{0:.2}{1:s}'.format(number / k**magnitude, units[magnitude])
+        else:
+            return '{0}'.format(number)
 
     def visit(node):
         if isinstance(node, SubscriptionFolder):
+            unwatched = node.getUnwatchedCount()
             return {
                 "id": __tree_folder_id(node.id),
                 "text": node.name,
                 "type": "folder",
                 "state": {"opened": True},
-                "parent": __tree_folder_id(node.parent_id)
+                "parent": __tree_folder_id(node.parent_id),
+                "li_attr": {"data-unwatched-count": unwatched}
             }
+
+            return data
         elif isinstance(node, Subscription):
+            unwatched = node.getUnwatchedCount()
             return {
                 "id": __tree_sub_id(node.id),
                 "type": "sub",
                 "text": node.name,
                 "icon": node.thumbnail,
-                "parent": __tree_folder_id(node.parent_folder_id)
+                "parent": __tree_folder_id(node.parent_folder_id),
+                "li_attr": {"data-unwatched-count": unwatched}
             }
 
     result = SubscriptionFolder.traverse(None, request.user, visit)
@@ -336,7 +351,7 @@ class UpdateSubscriptionForm(forms.ModelForm):
     class Meta:
         model = Subscription
         fields = ['name', 'parent_folder', 'auto_download',
-                  'download_limit', 'download_order', "automatically_delete_watched"]
+                  'download_limit', 'download_order', "automatically_delete_watched", 'last_synchronised']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -350,7 +365,8 @@ class UpdateSubscriptionForm(forms.ModelForm):
             'auto_download',
             'download_limit',
             'download_order',
-            'automatically_delete_watched'
+            'automatically_delete_watched',
+            Field('last_synchronised', readonly=True)
         )
 
 
