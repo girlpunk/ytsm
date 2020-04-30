@@ -201,6 +201,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'channels',
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -235,6 +236,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'YtManager.wsgi.application'
 
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_CACHE_BACKEND = 'django-cache'
+CELERY_BROKER_URL = 'redis://'
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
