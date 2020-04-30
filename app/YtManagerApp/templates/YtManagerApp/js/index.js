@@ -218,11 +218,7 @@ function videos_markallwatched(btn)
         url: "/ytsm/ajax/action/mark_video_watched/"+urls.join(),
         data: {csrfmiddlewaretoken: '{{ csrf_token }}'},
         complete : function () {
-            if(urls.length > 0) {
-                do_ajax();
-            } else {
-                $(btn)[0].innerHTML="Done";
-            }
+            $(btn)[0].innerHTML="Done";
         }
     })
 }
