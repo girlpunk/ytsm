@@ -7,12 +7,12 @@ jobs:
     runs-on: [ubuntu-latest]
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout
     - name: Set up Python 3.7
-      uses: actions/setup-python@v1
+      uses: actions/setup-python
       with:
         python-version: 3.x
-    - uses: actions/cache@v1
+    - uses: actions/cache
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -28,4 +28,8 @@ jobs:
       run: python app/manage.py check
 
     - name: wemake-python-styleguide
-      uses: wemake-services/wemake-python-styleguide@0.13.0
+      uses: wemake-services/wemake-python-styleguide
+      with:
+        reporter: 'github-pr-review'
+      env:
+        GITHUB_TOKEN: ${{ secrets.github_token }}
