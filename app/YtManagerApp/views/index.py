@@ -47,8 +47,8 @@ class VideoFilterForm(forms.Form):
     )
 
     query = forms.CharField(label='', required=False)
-    sort = forms.ChoiceField(label='Sort:', choices=VIDEO_ORDER_CHOICES, initial='newest')
-    show_watched = forms.ChoiceField(label='Show only: ', choices=CHOICES_SHOW_WATCHED, initial='all')
+    sort = forms.ChoiceField(label='Sort:', choices=VIDEO_ORDER_CHOICES, initial='oldest')
+    show_watched = forms.ChoiceField(label='Show only: ', choices=CHOICES_SHOW_WATCHED, initial='n')
     show_downloaded = forms.ChoiceField(label='', choices=CHOICES_SHOW_DOWNLOADED, initial='all')
     subscription_id = forms.IntegerField(
         required=False,
