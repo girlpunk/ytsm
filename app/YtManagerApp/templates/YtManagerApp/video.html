@@ -57,7 +57,11 @@
                     },
                     events: {
                         'onReady': onPlayerReady,
-                        'onStateChange': onPlayerStateChange
+                        'onStateChange': onPlayerStateChange,
+                        'onPlaybackQualityChange': onPlaybackQualityChange,
+                        'onPlaybackRateChange': onPlaybackRateChange,
+                        'onError': onError,
+                        'onApiChange': onApiChange
                     }
                 });
 
@@ -66,7 +70,24 @@
             }
 
             function onPlayerReady(event) {
+                console.log("Player Ready: ", event);
                 event.target.playVideo();
+            }
+
+            function onPlaybackQualityChange(event) {
+                console.log("Quality change: ", event);
+            }
+
+            function onPlaybackRateChange(event) {
+                console.log("Playback rate change: ", event);
+            }
+
+            function onError(event) {
+                console.log("Playback Error: ", event);
+            }
+
+            function onApiChange(event) {
+                console.log("API Change: ", event);
             }
 
             function onPlayerStateChange(event) {
