@@ -44,6 +44,7 @@ _DEFAULT_DATABASE = {
         'USER': None,
         'PASSWORD': None,
         'PORT': None,
+        'OPTIONS': {'charset': 'utf8mb4'},
     }
 
 CONFIG_ERRORS = []
