@@ -84,6 +84,11 @@
 
             function onError(event) {
                 console.log("Playback Error: ", event);
+                if(event.data == 150) {
+                    // "This error is the same as 101. It's just a 101 error in disguise!" - from the YT API Documentation, not 100% this is true.
+                    // Skip to the next video after 10 seconds, do not mark as watched.
+                    setTimeout(goNextVideo, 10 * 1000);
+                }
             }
 
             function onApiChange(event) {
