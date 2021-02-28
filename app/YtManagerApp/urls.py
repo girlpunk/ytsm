@@ -75,4 +75,5 @@ urlpatterns = [
     path('first_time/step3_config', first_time.Step3ConfigureView.as_view(), name='first_time_3'),
     path('first_time/done', first_time.DoneView.as_view(), name='first_time_done'),
 
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + \
+    static('static/', document_root=settings.STATIC_ROOT)
