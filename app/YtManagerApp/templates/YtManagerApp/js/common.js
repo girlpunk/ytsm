@@ -201,7 +201,7 @@ function ajaxLink_Clicked() {
 ///
 /// Notifications
 ///
-const JOB_QUERY_INTERVAL = 1500;
+const JOB_QUERY_INTERVAL = 30000;
 
 
 function get_and_process_running_jobs()

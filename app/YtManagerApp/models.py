@@ -1,6 +1,7 @@
 import logging
 import mimetypes
 import os
+import datetime
 from typing import Callable, Union, Any, Optional
 
 from django.contrib.auth.models import User
@@ -272,6 +273,10 @@ class Video(models.Model):
 
     def __repr__(self):
         return f'video {self.id}, video_id="{self.video_id}"'
+
+    @property
+    def duration_string(self):
+        return str(datetime.timedelta(seconds=self.duration))
 
 
 JOB_STATES = [

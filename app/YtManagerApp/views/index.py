@@ -4,7 +4,7 @@ from crispy_forms.layout import Layout, Field, HTML
 from django import forms
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.http import HttpRequest, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import render, redirect
 from django.views.generic import CreateView, UpdateView, DeleteView, FormView
@@ -18,6 +18,7 @@ from YtManagerApp.utils import youtube, subscription_file_parser
 from YtManagerApp.views.controls.modal import ModalMixin
 
 import logging
+import datetime
 
 
 class VideoFilterForm(forms.Form):
@@ -182,11 +183,14 @@ def ajax_get_videos(request: HttpRequest):
                 only_downloaded=form.cleaned_data['show_downloaded']
             )
 
+            duration = str(datetime.timedelta(seconds=videos.aggregate(Sum('duration'))['duration__sum']))
+
             paginator = Paginator(videos, form.cleaned_data['results_per_page'])
             videos = paginator.get_page(form.cleaned_data['page'])
 
             context = {
-                'videos': videos
+                'videos': videos,
+                'duration': duration
             }
 
             return render(request, 'YtManagerApp/index_videos.html', context)

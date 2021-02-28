@@ -4,7 +4,8 @@
 {% if videos %}
 <div class="row">
 	<a class="btn btn-secondary" href="{% url 'video' videos.0.id %}?next={% for video in videos|slice:"1:" %}{{video.id}}{% if not forloop.last %},{% endif %}{% endfor %}">Watch All Now</a>&nbsp;
-        <a class="btn btn-secondary" onclick="videos_markallwatched(this)" href="#">Mark All as Watched</a>
+        <a class="btn btn-secondary" onclick="videos_markallwatched(this)" href="#">Mark All as Watched</a>&nbsp;
+        <span class="btn btn-secondary">{{duration}} Total</span>
 </div>
 {% endif %}
 
@@ -67,6 +68,8 @@
                             <span>{{ video.views | intcomma }} views</span>
                             <span>&#x2022;</span>
                             <span>{{ video.publish_date | naturaltime }}</span>
+                            <span>&#x2022;</span>
+                            <span>{{ video.duration_string }}</span>
                         </p>
                         <p class="card-text">{{ video.description | truncatechars:120 }}</p>
                     </div>
