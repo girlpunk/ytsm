@@ -17,3 +17,4 @@ channels
 celery
 django-celery-results
 celery[redis]
+whitenoise
