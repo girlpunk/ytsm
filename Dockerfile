@@ -3,14 +3,14 @@ FROM python:3
 WORKDIR /opt/ytsm
 
 # ffmpeg is needed for youtube-dl
-RUN apt-get update
-RUN apt-get install ffmpeg -y
+RUN apt-get update && apt-get install ffmpeg -y && rm -rf /var/lib/apt/lists/*
 
 COPY ./requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 ENV YTSM_DEBUG='False'
 ENV YTSM_DATA_DIR='/data'
+ENV PYTHONUNBUFFERED=TRUE
 #ENV YTSM_CONFIG_DIR='/config'
 
 VOLUME /data

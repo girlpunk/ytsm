@@ -1,4 +1,4 @@
 #!/bin/bash
 
 ./manage.py migrate
-daphne -b 0.0.0.0:8000 -w 4 YtManager.wsgi
+daphne -b 0.0.0.0:8000 YtManager.asgi:application
