@@ -5,7 +5,7 @@ WORKDIR /opt/ytsm
 # ffmpeg is needed for youtube-dl
 RUN apt-get update && apt-get install -y \
     ffmpeg \
-    mysql-client\
+    mariadb-client\
   && rm -rf /var/lib/apt/lists/*
 
 COPY ./requirements.txt ./
