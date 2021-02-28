@@ -22,8 +22,9 @@ Environment variables
 
 Volumes
 -----
-- /usr/src/app/data
-- /usr/src/app/config
+- /data
+- /config
+- /downloads
 
 
 Notes

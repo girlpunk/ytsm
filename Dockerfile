@@ -1,6 +1,6 @@
 FROM python:3
 
-WORKDIR /usr/src/ytsm/app
+WORKDIR /opt/ytsm
 
 # ffmpeg is needed for youtube-dl
 RUN apt-get update
@@ -10,13 +10,15 @@ COPY ./requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 ENV YTSM_DEBUG='False'
-ENV YTSM_DATA_DIR='/usr/src/ytsm/data'
+ENV YTSM_DATA_DIR='/data'
+#ENV YTSM_CONFIG_DIR='/config'
 
-VOLUME /usr/src/ytsm/data
-VOLUME /usr/src/ytsm/download
+VOLUME /data
+VOLUME /download
+#VOLUME /config
 
 COPY ./app/ ./
-COPY ./config/ ./
+#COPY ./config/ /config/ 
 COPY ./docker/init.sh ./
 
 EXPOSE 8000
