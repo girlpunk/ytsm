@@ -27,7 +27,7 @@ BASE_DIR = up(os.path.dirname(__file__))                    # Base dir of the ap
 CONFIG_DIR = os.getenv("YTSM_CONFIG_DIR", os.path.join(PROJECT_ROOT, "config"))
 DATA_DIR = os.getenv("YTSM_DATA_DIR", os.path.join(PROJECT_ROOT, "data"))
 
-STATIC_ROOT = os.path.join(PROJECT_ROOT, "static")
+STATIC_ROOT = "/opt/static" #os.path.join(PROJECT_ROOT, "static")
 MEDIA_ROOT = os.path.join(DATA_DIR, 'media')
 
 #
