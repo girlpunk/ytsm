@@ -11,14 +11,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 ENV YTSM_DEBUG='False'
 ENV YTSM_DATA_DIR='/data'
 ENV PYTHONUNBUFFERED=TRUE
-#ENV YTSM_CONFIG_DIR='/config'
+ENV YTSM_CONFIG_DIR='/config'
 
 VOLUME /data
 VOLUME /download
-#VOLUME /config
+VOLUME /config
 
 COPY ./app/ ./
-#COPY ./config/ /config/ 
+COPY ./config/ /config/ 
 COPY ./docker/init.sh ./
 
 EXPOSE 8000
