@@ -18,4 +18,4 @@ celery
 django-celery-results
 celery[redis]
 whitenoise
-mysql-python
+mysqlclient
