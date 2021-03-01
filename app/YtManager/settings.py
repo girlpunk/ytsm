@@ -240,7 +240,7 @@ WSGI_APPLICATION = 'YtManager.wsgi.application'
 
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_CACHE_BACKEND = 'django-cache'
-CELERY_BROKER_URL = 'redis://'
+CELERY_BROKER_URL = get_global_opt('RedisUrl', cfg, env_variable='YTSM_REDIS_URL', fallback='redis://')
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
