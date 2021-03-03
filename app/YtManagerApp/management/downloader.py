@@ -11,6 +11,7 @@ import PIL.ImageOps
 from urllib.parse import urljoin
 
 log = logging.getLogger('downloader')
+log.setLevel(os.environ.get('LOGLEVEL', 'INFO').upper())
 
 
 def __get_subscription_config(sub: Subscription):
@@ -81,6 +82,8 @@ def fetch_thumbnail(url, object_type, identifier, thumb_size):
     abs_path_dir = os.path.join(srv_settings.MEDIA_ROOT, "thumbs", object_type)
     abs_path = os.path.join(abs_path_dir, file_name)
     abs_path_tmp = file_name + '.tmp'
+
+    log.info("Saving thumbnail to %s", abs_path)
 
     # Store image
     try:
