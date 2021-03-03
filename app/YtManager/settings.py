@@ -30,6 +30,9 @@ DATA_DIR = os.getenv("YTSM_DATA_DIR", os.path.join(PROJECT_ROOT, "data"))
 STATIC_ROOT = "/opt/static" #os.path.join(PROJECT_ROOT, "static")
 MEDIA_ROOT = os.path.join(DATA_DIR, 'media')
 
+print("Using static root: "+STATIC_ROOT)
+print("Using media root: "+MEDIA_ROOT)
+
 #
 # Defaults
 #
@@ -285,7 +288,7 @@ THUMBNAIL_SIZE_SUBSCRIPTION = (250, 250)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = get_global_opt('StaticUrl', cfg, env_variable='YTSM_STATIC_URL', fallback='/'+URL_BASE+'/static/')
-MEDIA_URL  = get_global_opt('MediaURL',  cfg, env_variable='YTSM_MEDIA_URK',  fallback='/'+URL_BASE+'/media/')
+MEDIA_URL  = get_global_opt('MediaURL',  cfg, env_variable='YTSM_MEDIA_URL',  fallback='/'+URL_BASE+'/media/')
 
 
 # Misc Django stuff
