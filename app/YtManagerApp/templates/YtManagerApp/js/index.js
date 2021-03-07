@@ -127,7 +127,7 @@ function tree_OnSelectionChanged(e, data)
     let node = data.instance.get_selected(true)[0];
 
     // Fill folder/sub fields
-    if (node == null) {
+    if (node === null) {
         filterForm_folderId.val('');
         filterForm_subId.val('');
     }
@@ -158,8 +158,7 @@ function videos_ResetPageAndReloadWithTimer()
     filters_form.find('input[name=page]').val("1");
 
     clearTimeout(videos_timeout);
-    videos_timeout = setTimeout(function()
-    {
+    videos_timeout = setTimeout(() => {
         videos_Reload();
         videos_timeout = null;
     }, 200);
@@ -188,19 +187,19 @@ function videos_Submit(e)
     let url = form.attr('action');
 
     $.post(url, form.serialize())
-        .done(function(result) {
+        .done(result => {
             $("#videos-wrapper").html(result);
             $(".ajax-link").on("click", ajaxLink_Clicked);
             $(".btn-paging").on("click", videos_PageClicked);
         })
-        .fail(function() {
+        .fail(() => {
             $("#videos-wrapper").html('<div class="alert alert-danger">An error occurred while retrieving the video list!</div>');
         })
-        .always(function() {
+        .always(() => {
             loadingDiv.fadeOut(100);
         });
 
-    if (e != null)
+    if (e !== null)
         e.preventDefault();
 }
 
@@ -240,25 +239,24 @@ function video_markwatched(btn) {
 ///
 /// Initialization
 ///
-$(document).ready(function ()
-{
+$(document).ready(() => {
     // Initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
 
     tree_Initialize();
 
     // Subscription toolbar
-    $("#btn_create_sub").on("click", function () {
+    $("#btn_create_sub").on("click", () => {
         let modal = new AjaxModal("{% url 'modal_create_subscription' %}");
         modal.setSubmitCallback(tree_Refresh);
         modal.loadAndShow();
     });
-    $("#btn_create_folder").on("click", function () {
+    $("#btn_create_folder").on("click", () => {
         let modal = new AjaxModal("{% url 'modal_create_folder' %}");
         modal.setSubmitCallback(tree_Refresh);
         modal.loadAndShow();
     });
-    $("#btn_import").on("click", function () {
+    $("#btn_import").on("click", () => {
         let modal = new AjaxModal("{% url 'modal_import_subscriptions' %}");
         modal.setSubmitCallback(tree_Refresh);
         modal.loadAndShow();

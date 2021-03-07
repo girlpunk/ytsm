@@ -1,4 +1,4 @@
-from typing import Optional, Callable
+from typing import Optional, Callable, Union
 
 
 class ProgressTracker(object):
@@ -21,7 +21,7 @@ class ProgressTracker(object):
         self.total_steps = total_steps
         self.steps = initial_steps
 
-        self.__subtask: ProgressTracker = None
+        self.__subtask: Union[ProgressTracker, None] = None
         self.__subtask_steps = 0
 
         self.__parent = parent

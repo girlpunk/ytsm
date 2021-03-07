@@ -1,0 +1,35 @@
+name: Python application
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: [ubuntu-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.x
+    - uses: actions/cache@v1
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install Dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        pip install -r requirements.txt
+        
+    - name: Check Django warnings
+      run: python app/manage.py check
+
+    - name: wemake-python-styleguide
+      uses: wemake-services/wemake-python-styleguide@0.14.0
+      with:
+        reporter: 'github-pr-review'
+      env:
+        GITHUB_TOKEN: ${{ secrets.github_token }}

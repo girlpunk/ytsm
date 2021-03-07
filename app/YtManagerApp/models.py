@@ -9,6 +9,7 @@ from django.db import models
 from django.db.models.functions import Lower
 
 from YtManagerApp.utils import youtube
+from external.pytaw.pytaw.youtube import Playlist, Channel, PlaylistItem
 
 # help_text = user shown text
 # verbose_name = user shown name
@@ -136,7 +137,7 @@ class Subscription(models.Model):
     def __repr__(self):
         return f'subscription {self.id}, name="{self.name}", playlist_id="{self.playlist_id}"'
 
-    def fill_from_playlist(self, info_playlist: youtube.Playlist):
+    def fill_from_playlist(self, info_playlist: Playlist):
         self.name = info_playlist.title
         self.playlist_id = info_playlist.id
         self.description = info_playlist.description
@@ -144,7 +145,7 @@ class Subscription(models.Model):
         self.channel_name = info_playlist.channel_title
         self.thumbnail = youtube.best_thumbnail(info_playlist).url
 
-    def copy_from_channel(self, info_channel: youtube.Channel):
+    def copy_from_channel(self, info_channel: Channel):
         # No point in storing info about the 'uploads from X' playlist
         self.name = info_channel.title
         self.playlist_id = info_channel.uploads_playlist.id
@@ -182,13 +183,13 @@ class Subscription(models.Model):
 
 class Video(models.Model):
     video_id = models.CharField(null=False, max_length=12)
-    name = models.TextField(null=False)
+    name = models.TextField()
     description = models.TextField()
-    watched = models.BooleanField(default=False, null=False)
-    new = models.BooleanField(default=True, null=False)
+    watched = models.BooleanField(default=False)
+    new = models.BooleanField(default=True)
     downloaded_path = models.TextField(null=True, blank=True)
     subscription = models.ForeignKey(Subscription, on_delete=models.CASCADE)
-    playlist_index = models.IntegerField(null=False)
+    playlist_index = models.IntegerField()
     publish_date = models.DateTimeField(null=False)
     thumbnail = models.TextField()
     uploader_name = models.CharField(null=False, max_length=255)
@@ -197,7 +198,7 @@ class Video(models.Model):
     duration = models.IntegerField(null=False, default=0)
 
     @staticmethod
-    def create(playlist_item: youtube.PlaylistItem, subscription: Subscription):
+    def create(playlist_item: PlaylistItem, subscription: Subscription):
         video = Video()
         video.video_id = playlist_item.resource_video_id
         video.name = playlist_item.title
@@ -310,7 +311,7 @@ class JobExecution(models.Model):
     end_date = models.DateTimeField(null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     description = models.CharField(max_length=250, null=False, default="")
-    status = models.IntegerField(choices=JOB_STATES, null=False, default=0)
+    status = models.IntegerField(choices=JOB_STATES, default=0)
 
 
 class JobMessage(models.Model):
@@ -318,5 +319,5 @@ class JobMessage(models.Model):
     job = models.ForeignKey(JobExecution, null=False, on_delete=models.CASCADE)
     progress = models.FloatField(null=True)
     message = models.CharField(max_length=1024, null=False, default="")
-    level = models.IntegerField(choices=JOB_MESSAGE_LEVELS, null=False, default=0)
-    suppress_notification = models.BooleanField(null=False, default=False)
+    level = models.IntegerField(choices=JOB_MESSAGE_LEVELS, default=0)
+    suppress_notification = models.BooleanField(default=False)

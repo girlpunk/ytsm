@@ -77,4 +77,3 @@ def get_all_children(t):
     if t.children is None:
         return [t]
     return [t] + [get_all_children(b) for b in t.children]
-

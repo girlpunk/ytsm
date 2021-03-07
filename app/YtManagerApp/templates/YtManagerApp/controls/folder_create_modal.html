@@ -6,7 +6,7 @@
 {% endblock modal_title %}
 
 {% block modal_content %}
-    <form action="{% url 'modal_create_folder' %}" method="post">
+    <form action="{% url 'modal_create_folder' None %}" method="post">
         {{ block.super }}
     </form>
 {% endblock %}

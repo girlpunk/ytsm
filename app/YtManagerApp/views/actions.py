@@ -19,7 +19,7 @@ class SyncNowView(LoginRequiredMixin, View):
 
 
 class DeleteVideoFilesView(LoginRequiredMixin, View):
-    def post(self, *args, **kwargs):
+    def post(self, **kwargs):
         video = Video.objects.get(id=kwargs['pk'])
         video.delete_files()
         return JsonResponse({
@@ -28,7 +28,7 @@ class DeleteVideoFilesView(LoginRequiredMixin, View):
 
 
 class DownloadVideoFilesView(LoginRequiredMixin, View):
-    def post(self, *args, **kwargs):
+    def post(self, **kwargs):
         video = Video.objects.get(id=kwargs['pk'])
         video.download()
         return JsonResponse({
@@ -51,7 +51,7 @@ class MarkVideoWatchedView(LoginRequiredMixin, View):
 
 
 class MarkVideoUnwatchedView(LoginRequiredMixin, View):
-    def post(self, *args, **kwargs):
+    def post(self, **kwargs):
         video = Video.objects.get(id=kwargs['pk'])
         video.mark_unwatched()
         video.save()

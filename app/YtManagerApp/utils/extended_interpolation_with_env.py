@@ -14,12 +14,12 @@ class ExtendedInterpolatorWithEnv(Interpolation):
     This modified version also allows specifying environment variables
     using ${env:...}, and allows adding additional options using 'set_additional_options'. """
 
-    _KEYCRE = re.compile(r"\$\{([^}]+)\}")
+    _KEYCRE = re.compile(r"\${([^}]+)\}")
 
     def before_get(self, parser, section, option, value, defaults):
-        L = []
-        self._interpolate_some(parser, option, L, value, section, defaults, 1)
-        return ''.join(L)
+        accum = []
+        self._interpolate_some(parser, option, accum, value, section, defaults, 1)
+        return ''.join(accum)
 
     def before_set(self, parser, section, option, value):
         tmp_value = value.replace('$$', '')  # escaped dollar signs
@@ -29,15 +29,17 @@ class ExtendedInterpolatorWithEnv(Interpolation):
                              "position %d" % (value, tmp_value.find('$')))
         return value
 
-    def _resolve_option(self, option, defaults):
+    @staticmethod
+    def _resolve_option(option, defaults):
         return defaults[option]
 
-    def _resolve_section_option(self, section, option, parser):
+    @staticmethod
+    def _resolve_section_option(section, option, parser):
         if section == 'env':
             return os.getenv(option, '')
         return parser.get(section, parser.optionxform(option), raw=True)
 
-    def _interpolate_some(self, parser, option, accum, rest, section, map,
+    def _interpolate_some(self, parser, option, accum, rest, section, options,
                           depth):
         rawval = parser.get(section, option, raw=True, fallback=rest)
         if depth > MAX_INTERPOLATION_DEPTH:
@@ -63,11 +65,11 @@ class ExtendedInterpolatorWithEnv(Interpolation):
                 path = m.group(1).split(':')
                 rest = rest[m.end():]
                 sect = section
-                opt = option
+
                 try:
                     if len(path) == 1:
                         opt = parser.optionxform(path[0])
-                        v = self._resolve_option(opt, map)
+                        v = self._resolve_option(opt, options)
                     elif len(path) == 2:
                         sect = path[0]
                         opt = path[1]

@@ -18,6 +18,7 @@ class SetVarNode(template.Node):
         return u""
 
 
+# noinspection PyUnusedLocal
 @register.tag(name='set')
 def set_var(parser, token):
     """

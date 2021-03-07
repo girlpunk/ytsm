@@ -7,7 +7,7 @@ from YtManagerApp.scheduler import Job, scheduler
 class DeleteVideoJob(Job):
     name = "DeleteVideoJob"
 
-    def __init__(self, job_execution, video: Video):
+    def __init__(self, job_execution, video: Video) -> None:
         super().__init__(job_execution)
         self._video = video
 
@@ -27,13 +27,13 @@ class DeleteVideoJob(Job):
                     self.log.error("Failed to delete file %s: Error: %s", file, e)
 
         except OSError as e:
-            self.log.error("Failed to delete video %d [%s %s]. Error: %s", self._video.id,
+            self.log.error("Failed to delete video %d [%s %s]. Error: %s", self._video.pk,
                            self._video.video_id, self._video.name, e)
 
         self._video.downloaded_path = None
         self._video.save()
 
-        self.log.info('Deleted video %d successfully! (%d files) [%s %s]', self._video.id, count,
+        self.log.info('Deleted video %d successfully! (%d files) [%s %s]', self._video.pk, count,
                       self._video.video_id, self._video.name)
 
     @staticmethod

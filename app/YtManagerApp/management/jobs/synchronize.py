@@ -185,7 +185,7 @@ class SynchronizeJob(Job):
 
             # Video not found, we can safely assume that the video was deleted.
             if not found_video:
-                self.log.info("Video %d was deleted! [%s %s]", video.id, video.video_id, video.name)
+                self.log.info("Video %d was deleted! [%s %s]", video.pk, video.video_id, video.name)
                 # Clean up
                 for file in files:
                     try:

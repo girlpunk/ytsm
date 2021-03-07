@@ -44,15 +44,17 @@ class DownloadVideoJob(Job):
             if ret == 0:
                 self.__video.downloaded_path = output_path
                 self.__video.save()
-                self.log.info('Video %d [%s %s] downloaded successfully!', self.__video.id, self.__video.video_id, self.__video.name)
+                self.log.info('Video %d [%s %s] downloaded successfully!', self.__video.pk, self.__video.video_id, self.__video.name)
 
             elif self.__attempt <= max_attempts:
                 self.log.warning('Re-enqueueing video (attempt %d/%d)', self.__attempt, max_attempts)
                 DownloadVideoJob.schedule(self.__video, self.__attempt + 1)
 
             else:
-                self.log.error('Multiple attempts to download video %d [%s %s] failed!', self.__video.id, self.__video.video_id,
-                          self.__video.name)
+                self.log.error('Multiple attempts to download video %d [%s %s] failed!',
+                               self.__video.pk,
+                               self.__video.video_id,
+                               self.__video.name)
                 self.__video.downloaded_path = ''
                 self.__video.save()
 
@@ -101,7 +103,8 @@ class DownloadVideoJob(Job):
 
         return youtube_dl_params, output_path
 
-    def __build_template_dict(self, video: Video):
+    @staticmethod
+    def __build_template_dict(video: Video):
         return {
             'channel': video.subscription.channel_name,
             'channel_id': video.subscription.channel_id,
@@ -112,7 +115,8 @@ class DownloadVideoJob(Job):
             'id': video.video_id,
         }
 
-    def __get_valid_path(self, path):
+    @staticmethod
+    def __get_valid_path(path):
         """
         Normalizes string, converts to lowercase, removes non-alpha characters,
         and converts spaces to hyphens.
