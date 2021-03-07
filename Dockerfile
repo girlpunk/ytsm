@@ -1,15 +1,19 @@
-FROM python:3
+FROM python:3-alpine
 
 WORKDIR /opt/ytsm
 
 # ffmpeg is needed for youtube-dl
-RUN apt-get update && apt-get install -y \
-    ffmpeg \
-    mariadb-client\
-  && rm -rf /var/lib/apt/lists/*
+#RUN apt-get update && apt-get install -y \
+#    ffmpeg \
+#    mariadb-client\
+#  && rm -rf /var/lib/apt/lists/*
 
 COPY ./requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+
+RUN apk add ffmpeg mariadb-client mariadb-dev build-base libffi-dev rust cargo jpeg-dev && \
+    pip install --no-cache-dir -r requirements.txt && \
+    rm -r /root/.cargo && \
+    apk del mariadb-dev build-base rust cargo
 
 ENV YTSM_DEBUG='False'
 ENV YTSM_DATA_DIR='/data'
