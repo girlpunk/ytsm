@@ -30,4 +30,4 @@ COPY ./docker/init.sh ./
 
 EXPOSE 8000
 
-CMD ["/bin/bash", "init.sh"]
+CMD ["/bin/sh", "init.sh"]
