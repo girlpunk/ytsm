@@ -1,4 +1,4 @@
-FROM python:3-alpine
+FROM alpine
 
 WORKDIR /opt/ytsm
 
@@ -10,7 +10,7 @@ WORKDIR /opt/ytsm
 
 COPY ./requirements.txt ./
 
-RUN apk add ffmpeg mariadb-client mariadb-dev build-base libffi-dev rust cargo jpeg-dev && \
+RUN apk add python3 ffmpeg mariadb-client mariadb-dev build-base libffi-dev rust cargo jpeg-dev && \
     pip install --no-cache-dir -r requirements.txt && \
     rm -r /root/.cargo && \
     apk del mariadb-dev build-base rust cargo
