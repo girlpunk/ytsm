@@ -1,7 +1,7 @@
 pytz
 requests
 apscheduler
-gunicorn
+#gunicorn
 django 
 django-crispy-forms 
 django-dynamic-preferences
