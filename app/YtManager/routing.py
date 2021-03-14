@@ -17,7 +17,8 @@ from YtManagerApp import consumers
 
 application = ProtocolTypeRouter({
     'websocket': URLRouter([
-    path('ytsm/ws/events/', consumers.EventConsumer),
-])})
+        path('ytsm/ws/events/', consumers.EventConsumer.as_asgi()),
+    ])
+})
 
 
