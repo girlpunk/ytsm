@@ -19,3 +19,4 @@ django-celery-results
 celery[redis]
 whitenoise
 mysqlclient
+uvicorn
