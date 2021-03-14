@@ -24,9 +24,6 @@ def get_all_children(t):
 class EventConsumer(WebsocketConsumer):
     http_user = True
 
-    def disconnect(self, message, **kwargs):
-        pass
-
     def receive(self, text=None, bytes=None, **kwargs):
         text_data_json = json.loads(text)
         request = text_data_json['request']
@@ -97,7 +94,7 @@ class EventConsumer(WebsocketConsumer):
             'data': response
         }))
 
-    def connect(self, message, **kwargs):
+    def connect(self):
         self.accept()
         self.jobs()
 
