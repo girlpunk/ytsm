@@ -2,6 +2,7 @@ import logging
 import logging.handlers
 import os
 import sys
+from asgiref.sync import sync_to_async
 
 from django.conf import settings as dj_settings
 
@@ -36,12 +37,20 @@ def main():
     __initialize_logger()
 
     try:
-        if appconfig.initialized:
-            scheduler.initialize()
-            SynchronizeJob.schedule_global_job()
+#        if appconfig.initialized:
+#            scheduler.initialize()
+#            SynchronizeJob.schedule_global_job()
+        sync_to_async(setup_scheduler)
     except (OperationalError, ProgrammingError):
         # Settings table is not created when running migrate or makemigrations;
         # Just don't do anything in this case.
         pass
 
     logging.info('Initialization complete.')
+
+@sync_to_async
+def setup_scheduler():
+    if appconfig.initialized:
+        scheduler.initialize()
+        SynchronizeJob.schedule_global_job()
+
