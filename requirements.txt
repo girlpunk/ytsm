@@ -20,3 +20,4 @@ celery[redis]
 whitenoise
 mysqlclient
 uvicorn[standard]
+Twisted<21
