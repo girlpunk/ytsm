@@ -25,7 +25,10 @@ class EventConsumer(WebsocketConsumer):
     http_user = True
 
     def receive(self, text=None, bytes=None, **kwargs):
-        text_data_json = json.loads(text)
+        if text:
+            text_data_json = json.loads(text)
+        elif bytes:
+            text_data_json = json.loads(bytes)
         request = text_data_json['request']
 
         if request == "jobs":
