@@ -4,7 +4,7 @@ import mimetypes
 import importlib
 import os
 import datetime
-from typing import Callable, Union, Any, Optional
+from typing import Callable, Union, Any, Optional, TYPE_CHECKING
 
 from django.contrib.auth.models import User
 from django.db import models
@@ -15,7 +15,9 @@ from django.conf import settings
 # help_text = user shown text
 # verbose_name = user shown name
 # null = nullable, blank = user is allowed to set value to empty
-from YtManagerApp.IProvider import IProvider
+
+if TYPE_CHECKING:
+    from YtManagerApp.IProvider import IProvider
 
 VIDEO_ORDER_CHOICES = [
     ('newest', 'Newest'),
@@ -149,7 +151,7 @@ class Subscription(models.Model):
     def get_unwatched_count(self):
         return Video.objects.filter(subscription=self, watched=False).count()
 
-    def get_provider(self) -> IProvider:
+    def get_provider(self) -> 'IProvider':
         if self.provider not in settings.INSTALLED_PROVIDERS:
             raise Exception("Provider "+self.provider+" not loaded for subscription "+self.name+" ("+str(self.id)+")")
         return importlib.import_module(self.provider).jobs.Jobs
