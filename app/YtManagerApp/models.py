@@ -125,7 +125,7 @@ class Subscription(models.Model):
     # youtube adds videos to the 'Uploads' playlist at the top instead of the bottom
     rewrite_playlist_indices = models.BooleanField(default=False)
     last_synchronised = models.DateTimeField(null=True, blank=True)
-    provider = models.CharField(null=False)
+    provider = models.CharField(null=False, blank=False, max_length=64)
 
     # overrides
     auto_download = models.BooleanField(null=True, blank=True)
