@@ -185,7 +185,8 @@ def ajax_get_videos(request: HttpRequest):
                 only_downloaded=form.cleaned_data['show_downloaded']
             )
 
-            duration = str(datetime.timedelta(seconds=videos.aggregate(Sum('duration'))['duration__sum']))
+            duration_raw = videos.aggregate(Sum('duration'))['duration__sum'] or 0
+            duration = str(datetime.timedelta(seconds=duration_raw))
 
             paginator = Paginator(videos, form.cleaned_data['results_per_page'])
             videos = paginator.get_page(form.cleaned_data['page'])
