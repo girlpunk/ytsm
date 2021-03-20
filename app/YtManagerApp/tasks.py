@@ -16,7 +16,4 @@ def synchronize_all():
     log.info("Starting synchronize all")
     channels = Subscription.objects.all().order_by(F('last_synchronised').desc(nulls_first=True))
     for channel in channels:
-        log.info("Trying to sync channel "+repr(channel))
-        provider = channel.get_provider()
-        log.info("Got provider "+repr(provider))
-        provider.synchronise_channel(channel)
+        channel.get_provider().synchronise_channel(channel)
