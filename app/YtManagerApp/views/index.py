@@ -308,12 +308,13 @@ class CreateSubscriptionForm(forms.ModelForm):
         )
 
     def save(self, commit=True):
-        m = super(CreateSubscriptionForm, self).save(commit=False)
+        m: Subscription = super(CreateSubscriptionForm, self).save(commit=False)
 
         for provider_name in settings.INSTALLED_PROVIDERS:
             provider: IProvider = importlib.import_module(provider_name+".jobs").Jobs
             if provider.is_url_valid_for_module(self.cleaned_data['playlist_url']):
                 provider.process_url(self.cleaned_data['playlist_url'], m)
+                m.provider = provider_name
                 break
 
         if commit:
