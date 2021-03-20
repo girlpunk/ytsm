@@ -8,7 +8,7 @@ from typing import Callable, Union, Any, Optional, TYPE_CHECKING
 
 from django.db import models
 from django.db.models.functions import Lower
-
+from django.contrib.auth.models import User
 from django.conf import settings
 
 # help_text = user shown text
@@ -17,7 +17,6 @@ from django.conf import settings
 
 if TYPE_CHECKING:
     from YtManagerApp.IProvider import IProvider
-    from django.contrib.auth.models import User
 
 VIDEO_ORDER_CHOICES = [
     ('newest', 'Newest'),
@@ -154,7 +153,7 @@ class Subscription(models.Model):
     def get_provider(self) -> 'IProvider':
         if self.provider not in settings.INSTALLED_PROVIDERS:
             raise Exception("Provider "+self.provider+" not loaded for subscription "+self.name+" ("+str(self.id)+")")
-        return importlib.import_module(self.provider).jobs.Jobs
+        return importlib.import_module(self.provider+".jobs").Jobs
 
 
 class Video(models.Model):

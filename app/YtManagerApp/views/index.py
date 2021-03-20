@@ -310,7 +310,7 @@ class CreateSubscriptionForm(forms.ModelForm):
         found_provider = False
         try:
             for provider_name in settings.INSTALLED_PROVIDERS:
-                provider: IProvider = importlib.import_module(provider_name).jobs.Jobs
+                provider: IProvider = importlib.import_module(provider_name+".jobs").Jobs
                 if provider.is_url_valid_for_module(self.cleaned_data['playlist_url']):
                     found_provider = True
                     break
@@ -331,7 +331,7 @@ class CreateSubscriptionModal(LoginRequiredMixin, ModalMixin, CreateView):
         found_provider = False
         try:
             for provider_name in settings.INSTALLED_PROVIDERS:
-                provider: IProvider = importlib.import_module(provider_name).jobs.Jobs
+                provider: IProvider = importlib.import_module(provider_name+".jobs").Jobs
                 if provider.is_url_valid_for_module(form.cleaned_data['playlist_url']):
                     found_provider = True
                     break
@@ -485,7 +485,7 @@ class ImportSubscriptionsModal(LoginRequiredMixin, ModalMixin, FormView):
             sub.automatically_delete_watched = form.cleaned_data["automatically_delete_watched"]
             try:
                 for provider_name in settings.INSTALLED_PROVIDERS:
-                    provider: IProvider = importlib.import_module(provider_name).jobs.Jobs
+                    provider: IProvider = importlib.import_module(provider_name+".jobs").Jobs
                     if provider.is_url_valid_for_module(url):
                         sub.provider = provider_name
                         provider.process_url(url, sub)
