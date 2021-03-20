@@ -30,9 +30,9 @@ def synchronize_channel(channel_id: int):
 
     __log.info("Starting check new videos " + channel.name)
     if channel.last_synchronised is None:
-        check_all_videos.delay(channel)
+        check_all_videos(channel)
     else:
-        check_rss_videos.delay(channel)
+        check_rss_videos(channel)
     channel.last_synchronised = datetime.datetime.now()
     channel.save()
 
@@ -65,7 +65,7 @@ def synchronize_channel(channel_id: int):
 
         # enqueue download
         for video in videos_to_download:
-            download_video.delay(video)
+            download_video.delay(video.pk)
 
 
 @shared_task
@@ -128,11 +128,12 @@ def fetch_missing_thumbnails_video(obj_id: int):
         obj.save()
 
 
-@shared_task
-def download_video(video: Video, attempt: int = 1):
+@shared_task()
+def download_video(video_pk: int, attempt: int = 1):
     # Issue: if multiple videos are downloaded at the same time, a race condition appears in the mkdirs() call that
     # youtube-dl makes, which causes it to fail with the error 'Cannot create folder - file already exists'.
     # For now, allow a single download instance.
+    video = Video.objects.get(pk=video_pk)
     __lock.acquire()
 
     try:
@@ -164,7 +165,8 @@ def download_video(video: Video, attempt: int = 1):
 
 
 @shared_task()
-def delete_video(video: Video):
+def delete_video(video_pk: int):
+    video = Video.objects.get(pk=video_pk)
     count = 0
 
     try:
@@ -201,7 +203,6 @@ def synchronize_video(video: Video):
         fetch_missing_thumbnails_video.delay(video.id)
 
 
-@shared_task()
 def check_rss_videos(sub: Subscription):
     found_existing_video = False
 
@@ -246,10 +247,9 @@ def check_rss_videos(sub: Subscription):
             synchronize_video(video)
 
     if not found_existing_video:
-        check_all_videos.delay(sub)
+        check_all_videos(sub)
 
 
-@shared_task()
 def check_all_videos(sub: Subscription):
     playlist_items = __api.playlist_items(sub.playlist_id)
     if sub.rewrite_playlist_indices:

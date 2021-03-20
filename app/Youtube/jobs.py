@@ -8,15 +8,15 @@ from YtManagerApp.models import Video, Subscription
 class Jobs(IProvider):
     @staticmethod
     def synchronise_channel(subscription: Subscription):
-        tasks.synchronize_channel.delay(subscription)
+        tasks.synchronize_channel.delay(subscription.pk)
 
     @staticmethod
     def download_video(video: Video):
-        tasks.download_video.delay(video)
+        tasks.download_video.delay(video.pk)
 
     @staticmethod
     def delete_video(video: Video):
-        tasks.delete_video.delay(video)
+        tasks.delete_video.delay(video.pk)
 
     @staticmethod
     def is_url_valid_for_module(url: str) -> bool:
