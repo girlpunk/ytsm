@@ -6,7 +6,6 @@ import os
 import datetime
 from typing import Callable, Union, Any, Optional, TYPE_CHECKING
 
-from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.functions import Lower
 
@@ -18,6 +17,7 @@ from django.conf import settings
 
 if TYPE_CHECKING:
     from YtManagerApp.IProvider import IProvider
+    from django.contrib.auth.models import User
 
 VIDEO_ORDER_CHOICES = [
     ('newest', 'Newest'),
@@ -78,7 +78,7 @@ class SubscriptionFolder(models.Model):
 
     @staticmethod
     def traverse(root_folder_id: Optional[int],
-                 user: User,
+                 user: 'User',
                  visit_func: Callable[[Union["SubscriptionFolder", "Subscription"]], Any]):
 
         data_collected = []
