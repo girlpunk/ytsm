@@ -216,12 +216,14 @@ def check_rss_videos(sub: Subscription):
         if results.exists():
             found_existing_video = True
         else:
-            video_title = entry.find("{http://www.w3.org/2005/Atom}title").text
+            video_title = entry.find("{http://www.w3.org/2005/Atom}title").text.encode("ascii", errors="ignore").decode()
 
             video = Video()
             video.video_id = video_id
             video.name = video_title
-            video.description = entry.find("{http://search.yahoo.com/mrss/}group").find("{http://search.yahoo.com/mrss/}description").text or ""
+            video.description = entry.find("{http://search.yahoo.com/mrss/}group")\
+                                     .find("{http://search.yahoo.com/mrss/}description")\
+                                     .text.encode("ascii", errors="ignore").decode() or ""
             video.watched = False
             video.new = True
             video.downloaded_path = None
@@ -268,8 +270,8 @@ def check_all_videos(sub: Subscription):
 
             video = Video()
             video.video_id = item.resource_video_id
-            video.name = item.title
-            video.description = item.description
+            video.name = item.title.encode("ascii", errors="ignore").decode()
+            video.description = item.description.encode("ascii", errors="ignore").decode()
             video.watched = False
             video.new = True
             video.downloaded_path = None
