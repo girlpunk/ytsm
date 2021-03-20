@@ -306,6 +306,20 @@ class CreateSubscriptionForm(forms.ModelForm):
             'automatically_delete_watched'
         )
 
+    def save(self, commit=True):
+        m = super(CreateSubscriptionForm, self).save(commit=False)
+
+        for provider_name in settings.INSTALLED_PROVIDERS:
+            provider: IProvider = importlib.import_module(provider_name+".jobs").Jobs
+            if provider.is_url_valid_for_module(self.cleaned_data['playlist_url']):
+                provider.process_url(self.cleaned_data['playlist_url'], m)
+                break
+
+        if commit:
+            m.save()
+
+        return m
+
     def clean_playlist_url(self):
         found_provider = False
         try:
