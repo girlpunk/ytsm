@@ -10,7 +10,6 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.functions import Lower
 
-from YtManagerApp.management.appconfig import appconfig
 from django.conf import settings
 
 # help_text = user shown text
@@ -176,6 +175,7 @@ class Video(models.Model):
         self.watched = True
         self.save()
         if self.downloaded_path is not None:
+            from YtManagerApp.management.appconfig import appconfig
             if appconfig.for_sub(self.subscription, 'automatically_delete_watched'):
                 self.subscription.get_provider().download_video(self)
                 self.subscription.get_provider().synchronise_channel(self.subscription)
