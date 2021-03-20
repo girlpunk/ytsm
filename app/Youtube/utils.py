@@ -5,8 +5,8 @@ from string import Template
 from typing import Optional
 import logging
 
-from YtManagerApp.models import Video
-from external.pytaw.pytaw.youtube import Thumbnail, Resource
+from YtManagerApp.models import Video, Subscription
+from external.pytaw.pytaw.youtube import Thumbnail, Resource, Channel, Playlist
 
 import youtube_dl
 
@@ -89,3 +89,25 @@ def best_thumbnail(resource: Resource) -> Optional[Thumbnail]:
         return None
 
     return max(thumbs, key=lambda t: t.width * t.height)
+
+
+def fill_from_playlist(subscription: Subscription, info_playlist: Playlist):
+    subscription.name = info_playlist.title
+    subscription.playlist_id = info_playlist.id
+    subscription.description = info_playlist.description
+    subscription.channel_id = info_playlist.channel_id
+    subscription.channel_name = info_playlist.channel_title
+    subscription.thumbnail = best_thumbnail(info_playlist).url
+    subscription.save()
+
+
+def copy_from_channel(subscription: Subscription, info_channel: Channel):
+    # No point in storing info about the 'uploads from X' playlist
+    subscription.name = info_channel.title
+    subscription.playlist_id = info_channel.uploads_playlist.id
+    subscription.description = info_channel.description
+    subscription.channel_id = info_channel.id
+    subscription.channel_name = info_channel.title
+    subscription.thumbnail = best_thumbnail(info_channel).url
+    subscription.rewrite_playlist_indices = True
+    subscription.save()

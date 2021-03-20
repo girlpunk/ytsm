@@ -3,18 +3,22 @@ from YtManagerApp.models import Video, Subscription
 
 
 class IProvider(ABC):
+    @staticmethod
     @abstractmethod
-    def download_video(self, video: Video):
+    def download_video(video: Video):
         pass
 
+    @staticmethod
     @abstractmethod
-    def synchronise_channel(self, subscription: Subscription):
+    def synchronise_channel(subscription: Subscription):
         pass
 
+    @staticmethod
     @abstractmethod
-    def process_url(self, url: str, subscription: Subscription) -> bool:
+    def process_url(url: str, subscription: Subscription) -> bool:
         pass
 
+    @staticmethod
     @abstractmethod
-    def is_url_valid_for_module(self, url: str) -> bool:
+    def is_url_valid_for_module(url: str) -> bool:
         pass
