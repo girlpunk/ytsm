@@ -29,6 +29,12 @@ class EventConsumer(WebsocketConsumer):
             text_data_json = json.loads(text)
         elif bytes:
             text_data_json = json.loads(bytes)
+        else:
+            self.send(text_data=json.dumps({
+                'request': 'error',
+                'data': "Unable to find request body"
+            }))
+            return
         request = text_data_json['request']
 
         if request == "jobs":
@@ -37,7 +43,9 @@ class EventConsumer(WebsocketConsumer):
     def jobs(self):
         #TODO: User filtering
 
-        sync_all_tasks = django_celery_results.models.TaskResult.objects.filter(task_name="YtManagerApp.tasks.synchronize_all", date_created__gte=datetime.datetime.now()-datetime.timedelta(days=1))
+        sync_all_tasks = django_celery_results.models.TaskResult.objects.filter(
+            task_name="YtManagerApp.tasks.synchronize_all",
+            date_created__gte=datetime.datetime.now()-datetime.timedelta(days=1))
 
         all_children = []
         response = []
@@ -69,7 +77,9 @@ class EventConsumer(WebsocketConsumer):
                 'message': str(complete_tasks) + " / " + str(all_tasks)
             }]
 
-        sync_other_tasks = django_celery_results.models.TaskResult.objects.filter(date_done__isnull=True).exclude(task_id__in=all_children)
+        sync_other_tasks = django_celery_results.models.TaskResult.objects\
+            .filter(date_done__isnull=True)\
+            .exclude(task_id__in=all_children)
 
         for taskResult in sync_other_tasks:
             task = AsyncResult(taskResult.task_id)
@@ -100,4 +110,3 @@ class EventConsumer(WebsocketConsumer):
     def connect(self):
         self.accept()
         self.jobs()
-

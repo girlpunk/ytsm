@@ -1,0 +1,181 @@
+import datetime
+import re
+
+import os
+from string import Template
+from xml.etree import ElementTree
+from typing import Optional
+
+import requests
+from django.db.models import Max
+
+from Youtube.tasks import _ENABLE_UPDATE_STATS, actual_synchronize_video, fetch_missing_thumbnails_video, __api, __log_youtube_dl
+from YtManagerApp.models import Video, Subscription
+from external.pytaw.pytaw.youtube import Thumbnail, Resource
+
+
+def synchronize_video(video: Video):
+    if video.downloaded_path is not None or _ENABLE_UPDATE_STATS or video.duration == 0:
+        actual_synchronize_video.delay(video.id)
+
+    if video.thumbnail.startswith("http"):
+        fetch_missing_thumbnails_video.delay(video.id)
+
+
+def check_rss_videos(sub: Subscription):
+    found_existing_video = False
+
+    rss_request = requests.get("https://www.youtube.com/feeds/videos.xml?channel_id="+sub.channel_id)
+    rss_request.raise_for_status()
+
+    rss = ElementTree.fromstring(rss_request.content)
+    for entry in rss.findall("{http://www.w3.org/2005/Atom}entry"):
+        video_id = entry.find("{http://www.youtube.com/xml/schemas/2015}videoId").text
+        results = Video.objects.filter(video_id=video_id, subscription=sub)
+        if results.exists():
+            found_existing_video = True
+        else:
+            video_title = entry.find("{http://www.w3.org/2005/Atom}title").text
+
+            video = Video()
+            video.video_id = video_id
+            video.name = video_title
+            video.description = entry.find("{http://search.yahoo.com/mrss/}group").find("{http://search.yahoo.com/mrss/}description").text or ""
+            video.watched = False
+            video.new = True
+            video.downloaded_path = None
+            video.subscription = sub
+            video.playlist_index = 0
+            video.publish_date = datetime.datetime.fromisoformat(entry.find("{http://www.w3.org/2005/Atom}published").text)
+            video.thumbnail = entry\
+                .find("{http://search.yahoo.com/mrss/}group")\
+                .find("{http://search.yahoo.com/mrss/}thumbnail")\
+                .get("url")
+            video.rating = entry\
+                .find("{http://search.yahoo.com/mrss/}group")\
+                .find("{http://search.yahoo.com/mrss/}community")\
+                .find("{http://search.yahoo.com/mrss/}starRating")\
+                .get("average")
+            video.views = entry\
+                .find("{http://search.yahoo.com/mrss/}group")\
+                .find("{http://search.yahoo.com/mrss/}community")\
+                .find("{http://search.yahoo.com/mrss/}statistics")\
+                .get("views")
+            video.save()
+
+            synchronize_video(video)
+
+    if not found_existing_video:
+        check_all_videos(sub)
+
+
+def check_all_videos(sub: Subscription):
+    playlist_items = __api.playlist_items(sub.playlist_id)
+    if sub.rewrite_playlist_indices:
+        playlist_items = sorted(playlist_items, key=lambda x: x.published_at)
+    else:
+        playlist_items = sorted(playlist_items, key=lambda x: x.position)
+
+    for item in playlist_items:
+        results = Video.objects.filter(video_id=item.resource_video_id, subscription=sub)
+
+        if not results.exists():
+            # fix playlist index if necessary
+            if sub.rewrite_playlist_indices or Video.objects.filter(subscription=sub, playlist_index=item.position).exists():
+                highest = Video.objects.filter(subscription=sub).aggregate(Max('playlist_index'))['playlist_index__max']
+                item.position = 1 + (highest or -1)
+
+            video = Video()
+            video.video_id = item.resource_video_id
+            video.name = item.title
+            video.description = item.description
+            video.watched = False
+            video.new = True
+            video.downloaded_path = None
+            video.subscription = sub
+            video.playlist_index = item.position
+            video.publish_date = item.published_at
+            video.thumbnail = best_thumbnail(item).url
+            video.save()
+
+            synchronize_video(video)
+
+
+def build_youtube_dl_params(video: Video):
+    sub = video.subscription
+    user = sub.user
+
+    # resolve path
+    download_path = user.preferences['download_path']
+
+    template_dict = build_template_dict(video)
+    output_pattern = Template(user.preferences['download_file_pattern']).safe_substitute(template_dict)
+
+    output_path = os.path.join(download_path, output_pattern)
+    output_path = os.path.normpath(output_path)
+
+    youtube_dl_params = {
+        'logger': __log_youtube_dl,
+        'format': user.preferences['download_format'],
+        'outtmpl': output_path,
+        'writethumbnail': True,
+        'writedescription': True,
+        'writesubtitles': user.preferences['download_subtitles'],
+        'writeautomaticsub': user.preferences['download_autogenerated_subtitles'],
+        'allsubtitles': user.preferences['download_subtitles_all'],
+        'merge_output_format': 'mp4',
+        'postprocessors': [
+            {
+                'key': 'FFmpegMetadata'
+            },
+        ]
+    }
+
+    sub_langs = user.preferences['download_subtitles_langs'].split(',')
+    sub_langs = [i.strip() for i in sub_langs]
+    if len(sub_langs) > 0:
+        youtube_dl_params['subtitleslangs'] = sub_langs
+
+    sub_format = user.preferences['download_subtitles_format']
+    if len(sub_format) > 0:
+        youtube_dl_params['subtitlesformat'] = sub_format
+
+    return youtube_dl_params, output_path
+
+
+def build_template_dict(video: Video):
+    return {
+        'channel': video.subscription.channel_name,
+        'channel_id': video.subscription.channel_id,
+        'playlist': video.subscription.name,
+        'playlist_id': video.subscription.playlist_id,
+        'playlist_index': "{:03d}".format(1 + video.playlist_index),
+        'title': video.name,
+        'id': video.video_id,
+    }
+
+
+def get_valid_path(path):
+    """
+    Normalizes string, converts to lowercase, removes non-alpha characters,
+    and converts spaces to hyphens.
+    """
+    import unicodedata
+    value = unicodedata.normalize('NFKD', path).encode('ascii', 'ignore').decode('ascii')
+    value = re.sub('[:"*]', '', value).strip()
+    value = re.sub('[?<>|]', '#', value)
+    return value
+
+
+def best_thumbnail(resource: Resource) -> Optional[Thumbnail]:
+    """
+    Gets the best thumbnail available for a resource.
+    :param resource:
+    :return:
+    """
+    thumbs = getattr(resource, 'thumbnails', None)
+
+    if thumbs is None or len(thumbs) <= 0:
+        return None
+
+    return max(thumbs, key=lambda t: t.width * t.height)

@@ -1,21 +1,23 @@
-from YtManagerApp.management.jobs.download_video import DownloadVideoJob
-from YtManagerApp.models import Video, Subscription, VIDEO_ORDER_MAPPING
-from YtManagerApp.utils import first_non_null
-from django.conf import settings as srv_settings
 import logging
-import requests
 import mimetypes
-import os
+from urllib.parse import urljoin
+
 import PIL.Image
 import PIL.ImageOps
-from urllib.parse import urljoin
+import os
+import requests
+from django.conf import settings as srv_settings
+from django.contrib.auth.models import User
+
+from YtManagerApp.models import Video, Subscription, VIDEO_ORDER_MAPPING
+from YtManagerApp.utils import first_non_null
 
 log = logging.getLogger('downloader')
 log.setLevel(os.environ.get('LOGLEVEL', 'INFO').upper())
 
 
 def __get_subscription_config(sub: Subscription):
-    user = sub.user
+    user: User = sub.user
 
     enabled = first_non_null(sub.auto_download, user.preferences['auto_download'])
     global_limit = user.preferences['download_global_limit']
@@ -54,7 +56,7 @@ def downloader_process_subscription(sub: Subscription):
         # enqueue download
         for video in videos_to_download:
             log.info('Enqueuing video %d [%s %s] index=%d', video.id, video.video_id, video.name, video.playlist_index)
-            DownloadVideoJob.schedule(video)
+            video.subscription.get_provider().download_video(video)
 
     log.info('Finished processing subscription %d [%s %s]', sub.id, sub.playlist_id, sub.id)
 

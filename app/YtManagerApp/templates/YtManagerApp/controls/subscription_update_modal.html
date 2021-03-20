@@ -26,7 +26,7 @@
     function synchronizeChannelNow() {
         $.post("{% url 'ajax_action_sync_now' form.instance.pk %}", {
             csrfmiddlewaretoken: '{{ csrf_token }}'
-        }, function() {
+        }, () => {
         });
     }
 </script>

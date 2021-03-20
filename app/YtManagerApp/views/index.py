@@ -1,4 +1,6 @@
 from math import log, floor
+
+import importlib
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Field, HTML
 from django import forms
@@ -11,10 +13,12 @@ from django.views.generic import CreateView, UpdateView, DeleteView, FormView
 from django.views.generic.edit import FormMixin
 from django.conf import settings
 from django.core.paginator import Paginator
+
+from YtManagerApp.IProvider import IProvider
 from YtManagerApp.management.videos import get_videos
 from YtManagerApp.management.appconfig import appconfig
 from YtManagerApp.models import Subscription, SubscriptionFolder, VIDEO_ORDER_CHOICES, VIDEO_ORDER_MAPPING
-from YtManagerApp.utils import youtube, subscription_file_parser
+from YtManagerApp.utils import subscription_file_parser
 from YtManagerApp.views.controls.modal import ModalMixin
 
 import logging
@@ -142,7 +146,7 @@ def ajax_get_tree(request: HttpRequest):
 
     def visit(node):
         if isinstance(node, SubscriptionFolder):
-            unwatched = node.getUnwatchedCount()
+            unwatched = node.get_unwatched_count()
             return {
                 "id": __tree_folder_id(node.id),
                 "text": node.name,
@@ -151,10 +155,8 @@ def ajax_get_tree(request: HttpRequest):
                 "parent": __tree_folder_id(node.parent_id),
                 "li_attr": {"data-unwatched-count": unwatched}
             }
-
-            return data
         elif isinstance(node, Subscription):
-            unwatched = node.getUnwatchedCount()
+            unwatched = node.get_unwatched_count()
             return {
                 "id": __tree_sub_id(node.id),
                 "type": "sub",
@@ -291,7 +293,6 @@ class CreateSubscriptionForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.yt_api = youtube.YoutubeAPI.build_public()
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.layout = Layout(
@@ -306,19 +307,19 @@ class CreateSubscriptionForm(forms.ModelForm):
         )
 
     def clean_playlist_url(self):
-        playlist_url: str = self.cleaned_data['playlist_url']
+        found_provider = False
         try:
-            parsed_url = self.yt_api.parse_url(playlist_url)
-        except youtube.InvalidURL as e:
+            for provider_name in settings.INSTALLED_PROVIDERS:
+                provider: IProvider = importlib.import_module(provider_name).jobs.Jobs
+                if provider.is_url_valid_for_module(self.cleaned_data['playlist_url']):
+                    found_provider = True
+                    break
+        except Exception as e:
             raise forms.ValidationError(str(e))
+        if not found_provider:
+            raise forms.ValidationError("URL not recognused. Please verify that the URL is correct")
 
-        is_playlist = 'playlist' in parsed_url
-        is_channel = parsed_url['type'] in ('channel', 'user', 'channel_custom')
-
-        if not is_channel and not is_playlist:
-            raise forms.ValidationError('The given URL must link to a channel or a playlist!')
-
-        return playlist_url
+        return self.cleaned_data['playlist_url']
 
 
 class CreateSubscriptionModal(LoginRequiredMixin, ModalMixin, CreateView):
@@ -327,25 +328,17 @@ class CreateSubscriptionModal(LoginRequiredMixin, ModalMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.user = self.request.user
-        api = youtube.YoutubeAPI.build_public()
+        found_provider = False
         try:
-            form.instance.fetch_from_url(form.cleaned_data['playlist_url'], api)
-        except youtube.InvalidURL as e:
+            for provider_name in settings.INSTALLED_PROVIDERS:
+                provider: IProvider = importlib.import_module(provider_name).jobs.Jobs
+                if provider.is_url_valid_for_module(form.cleaned_data['playlist_url']):
+                    found_provider = True
+                    break
+        except Exception as e:
             return self.modal_response(form, False, str(e))
-        except ValueError as e:
-            return self.modal_response(form, False, str(e))
-        # except youtube.YoutubeUserNotFoundException:
-        #     return self.modal_response(
-        #         form, False, 'Could not find an user based on the given URL. Please verify that the URL is correct.')
-        # except youtube.YoutubePlaylistNotFoundException:
-        #     return self.modal_response(
-        #         form, False, 'Could not find a playlist based on the given URL. Please verify that the URL is correct.')
-        # except youtube.YoutubeException as e:
-        #     return self.modal_response(
-        #         form, False, str(e))
-        # except youtube.APIError as e:
-        #     return self.modal_response(
-        #         form, False, 'An error occurred while communicating with the YouTube API: ' + str(e))
+        if not found_provider:
+            return self.modal_response(form, False, "URL not recognused. Please verify that the URL is correct")
 
         return super().form_valid(form)
 
@@ -427,7 +420,6 @@ class ImportSubscriptionsForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.yt_api = youtube.YoutubeAPI.build_public()
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.layout = Layout(
@@ -483,7 +475,6 @@ class ImportSubscriptionsModal(LoginRequiredMixin, ModalMixin, FormView):
         print(form.cleaned_data)
 
         # Create subscriptions
-        api = youtube.YoutubeAPI.build_public()
         for url in url_list:
             sub = Subscription()
             sub.user = self.request.user
@@ -493,7 +484,12 @@ class ImportSubscriptionsModal(LoginRequiredMixin, ModalMixin, FormView):
             sub.download_order = form.cleaned_data['download_order']
             sub.automatically_delete_watched = form.cleaned_data["automatically_delete_watched"]
             try:
-                sub.fetch_from_url(url, api)
+                for provider_name in settings.INSTALLED_PROVIDERS:
+                    provider: IProvider = importlib.import_module(provider_name).jobs.Jobs
+                    if provider.is_url_valid_for_module(url):
+                        sub.provider = provider_name
+                        provider.process_url(url, sub)
+                        break
             except Exception as e:
                 logging.error("Import subscription error - error processing URL %s: %s", url, e)
                 continue

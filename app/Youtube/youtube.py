@@ -1,6 +1,6 @@
-from django.conf import settings
-from external.pytaw.pytaw.youtube import YouTube, Channel, Playlist, PlaylistItem, Thumbnail, InvalidURL, Resource, Video
 from typing import Optional
+
+from external.pytaw.pytaw.youtube import YouTube, Thumbnail, Resource
 
 
 class YoutubeAPI(YouTube):
@@ -33,17 +33,3 @@ def default_thumbnail(resource: Resource) -> Optional[Thumbnail]:
         (i for i in thumbs if i.id == 'default'),
         thumbs[0]
     )
-
-
-def best_thumbnail(resource: Resource) -> Optional[Thumbnail]:
-    """
-    Gets the best thumbnail available for a resource.
-    :param resource:
-    :return:
-    """
-    thumbs = getattr(resource, 'thumbnails', None)
-
-    if thumbs is None or len(thumbs) <= 0:
-        return None
-
-    return max(thumbs, key=lambda t: t.width * t.height)

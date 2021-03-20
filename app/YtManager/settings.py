@@ -14,24 +14,26 @@ import os
 import sys
 import logging
 from os.path import dirname as up
-
+from configparser import ConfigParser
+from YtManagerApp.utils.extended_interpolation_with_env import ExtendedInterpolatorWithEnv
+import dj_database_url
 
 #
 # Directories
 #
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-PROJECT_ROOT = up(up(os.path.dirname(__file__)))            # Project root
-BASE_DIR = up(os.path.dirname(__file__))                    # Base dir of the application
+PROJECT_ROOT = up(up(os.path.dirname(__file__)))  # Project root
+BASE_DIR = up(os.path.dirname(__file__))  # Base dir of the application
 
 CONFIG_DIR = os.getenv("YTSM_CONFIG_DIR", os.path.join(PROJECT_ROOT, "config"))
 DATA_DIR = os.getenv("YTSM_DATA_DIR", os.path.join(PROJECT_ROOT, "data"))
 
-STATIC_ROOT = "/opt/static" #os.path.join(PROJECT_ROOT, "static")
+STATIC_ROOT = "/opt/static"
 MEDIA_ROOT = os.path.join(DATA_DIR, 'media')
 
-print("Using static root: "+STATIC_ROOT)
-print("Using media root: "+MEDIA_ROOT)
+print("Using static root: " + STATIC_ROOT)
+print("Using media root: " + MEDIA_ROOT)
 
 #
 # Defaults
@@ -41,14 +43,14 @@ _DEFAULT_DEBUG = False
 _DEFAULT_SECRET_KEY = '^zv8@i2h!ko2lo=%ivq(9e#x=%q*i^^)6#4@(juzdx%&0c+9a0'
 
 _DEFAULT_DATABASE = {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(DATA_DIR, 'ytmanager.db'),
-        'HOST': None,
-        'USER': None,
-        'PASSWORD': None,
-        'PORT': None,
-        'OPTIONS': {'charset': 'utf8mb4'},
-    }
+    'ENGINE': 'django.db.backends.sqlite3',
+    'NAME': os.path.join(DATA_DIR, 'ytmanager.db'),
+    'HOST': None,
+    'USER': None,
+    'PASSWORD': None,
+    'PORT': None,
+    'OPTIONS': {'charset': 'utf8mb4'},
+}
 
 CONFIG_ERRORS = []
 CONFIG_WARNINGS = []
@@ -62,6 +64,8 @@ CFG_PARSER_OPTS = {
     'CONFIG_DIR': CONFIG_DIR,
     'DATA_DIR': DATA_DIR,
 }
+
+INSTALLED_PROVIDERS = ["Youtube"]
 
 
 #
@@ -115,10 +119,6 @@ def get_global_opt(name, cfgparser, env_variable=None, fallback=None, boolean=Fa
     return cfgparser.get('global', name, fallback=fallback, vars=CFG_PARSER_OPTS)
 
 
-from configparser import ConfigParser
-from YtManagerApp.utils.extended_interpolation_with_env import ExtendedInterpolatorWithEnv
-import dj_database_url
-
 try:
     os.makedirs(DATA_DIR, exist_ok=True)
     logging.info(f"Using data directory {DATA_DIR}")
@@ -132,19 +132,19 @@ read_ok = cfg.read([cfg_file])
 
 if cfg_file not in read_ok:
     CONFIG_ERRORS.append(f'Configuration file {cfg_file} could not be read! Please make sure the file is in the '
-                          'right place, and it has read permissions.')
+                         'right place, and it has read permissions.')
 
 # Debug
-#global DEBUG
+# global DEBUG
 DEBUG = get_global_opt('Debug', cfg, env_variable='YTSM_DEBUG', fallback=_DEFAULT_DEBUG, boolean=True)
 
 # Secret key
 # SECURITY WARNING: keep the secret key used in production secret!
-#global SECRET_KEY
+# global SECRET_KEY
 SECRET_KEY = get_global_opt('SecretKey', cfg, env_variable='YTSM_SECRET_KEY', fallback=_DEFAULT_SECRET_KEY)
 
 # Database
-#global DATABASES
+# global DATABASES
 DATABASES = {
     'default': _DEFAULT_DATABASE
 }
@@ -169,7 +169,7 @@ else:
     }
 
 # Log settings
-#global LOG_LEVEL
+# global LOG_LEVEL
 log_level_str = get_global_opt('LogLevel', cfg, env_variable='YTSM_LOG_LEVEL', fallback='INFO')
 
 try:
@@ -177,10 +177,8 @@ try:
 except AttributeError:
     CONFIG_WARNINGS.append(f'Invalid log level {log_level_str}. '
                            f'Valid options are: DEBUG, INFO, WARN, ERROR, CRITICAL.')
-    print("Invalid log level " + LOG_LEVEL)
+    print("Invalid log level " + getattr(logging, log_level_str))
     LOG_LEVEL = logging.INFO
-
-
 
 URL_BASE = get_global_opt('UrlBase', cfg, env_variable='YTSM_URL_BASE', fallback="")
 
@@ -188,7 +186,7 @@ URL_BASE = get_global_opt('UrlBase', cfg, env_variable='YTSM_URL_BASE', fallback
 # Basic Django stuff
 #
 ALLOWED_HOSTS = ['*']
-SESSION_COOKIE_AGE = 3600 * 30      # one month
+SESSION_COOKIE_AGE = 3600 * 30  # one month
 
 # Application definition
 
@@ -207,6 +205,8 @@ INSTALLED_APPS = [
     'channels',
     'django_celery_results',
 ]
+
+INSTALLED_APPS += INSTALLED_PROVIDERS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -263,9 +263,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LOGIN_REDIRECT_URL = '/'+URL_BASE
-LOGIN_URL = '/'+URL_BASE+'login'
-
+LOGIN_REDIRECT_URL = '/' + URL_BASE
+LOGIN_URL = '/' + URL_BASE + 'login'
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
@@ -287,9 +286,8 @@ THUMBNAIL_SIZE_SUBSCRIPTION = (250, 250)
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
-STATIC_URL = get_global_opt('StaticUrl', cfg, env_variable='YTSM_STATIC_URL', fallback='/'+URL_BASE+'/static/')
-MEDIA_URL  = get_global_opt('MediaURL',  cfg, env_variable='YTSM_MEDIA_URL',  fallback='/'+URL_BASE+'/media/')
-
+STATIC_URL = get_global_opt('StaticUrl', cfg, env_variable='YTSM_STATIC_URL', fallback='/' + URL_BASE + '/static/')
+MEDIA_URL = get_global_opt('MediaURL', cfg, env_variable='YTSM_MEDIA_URL', fallback='/' + URL_BASE + '/media/')
 
 # Misc Django stuff
 
@@ -297,12 +295,5 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 LOG_FORMAT = '%(asctime)s|%(process)d|%(thread)d|%(name)s|%(filename)s|%(lineno)d|%(levelname)s|%(message)s'
 CONSOLE_LOG_FORMAT = '%(asctime)s | %(name)s | %(filename)s:%(lineno)d | %(levelname)s | %(message)s'
-
-## These are just to make inspector happy, they will be set in the load_config_ini() method
-#DEBUG = None
-#SECRET_KEY = None
-#DATABASES = None
-#LOG_LEVEL = None
-
 
 ASGI_APPLICATION = 'YtManager.routing.application'

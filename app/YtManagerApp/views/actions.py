@@ -3,14 +3,14 @@ from django.http import JsonResponse
 from django.views.generic import View
 
 from YtManagerApp import tasks
-from YtManagerApp.management.jobs.synchronize import SynchronizeJob
 from YtManagerApp.models import Video, Subscription
 
 
 class SyncNowView(LoginRequiredMixin, View):
     def post(self, *args, **kwargs):
         if 'pk' in kwargs:
-            tasks.synchronize_channel.delay(kwargs['pk'])
+            subscription = Subscription.objects.get(id=kwargs['pk'])
+            subscription.get_provider().synchronise_channel(subscription)
         else:
             tasks.synchronize_all.delay()
         return JsonResponse({

@@ -9,8 +9,6 @@ from django.urls import reverse_lazy
 from django.views.generic import FormView
 
 from YtManagerApp.management.appconfig import appconfig
-from YtManagerApp.management.jobs.synchronize import SynchronizeJob
-from YtManagerApp.scheduler import scheduler
 from YtManagerApp.views.forms.first_time import WelcomeForm, ApiKeyForm, PickAdminUserForm, ServerConfigForm, DoneForm, \
     UserCreationForm, LoginForm
 
@@ -18,7 +16,6 @@ logger = logging.getLogger("FirstTimeWizard")
 
 
 class WizardStepMixin:
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -175,10 +172,6 @@ class Step3ConfigureView(WizardStepMixin, FormView):
 
         # Set initialized to true
         appconfig.initialized = True
-
-        # Start scheduler if not started
-        scheduler.initialize()
-        SynchronizeJob.schedule_global_job()
 
         return super().form_valid(form)
 

@@ -1,5 +1,7 @@
 import logging
 import mimetypes
+
+import importlib
 import os
 import datetime
 from typing import Callable, Union, Any, Optional
@@ -8,11 +10,14 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.functions import Lower
 
-from YtManagerApp.utils import youtube
+from YtManagerApp.management.appconfig import appconfig
+from django.conf import settings
 
 # help_text = user shown text
 # verbose_name = user shown name
 # null = nullable, blank = user is allowed to set value to empty
+from YtManagerApp.IProvider import IProvider
+
 VIDEO_ORDER_CHOICES = [
     ('newest', 'Newest'),
     ('oldest', 'Oldest'),
@@ -51,13 +56,12 @@ class SubscriptionFolder(models.Model):
     def __repr__(self):
         return f'folder {self.id}, name="{self.name}"'
 
-    def getUnwatchedCount(self):
+    def get_unwatched_count(self):
         def count(node: Union["SubscriptionFolder", "Subscription"]):
             if node.pk != self.pk:
-                return node.getUnwatchedCount()
+                return node.get_unwatched_count()
 
         return sum(SubscriptionFolder.traverse(self.id, self.user, count))
-
 
     def delete_folder(self, keep_subscriptions: bool):
         if keep_subscriptions:
@@ -118,8 +122,9 @@ class Subscription(models.Model):
     thumbnail = models.CharField(max_length=1024)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     # youtube adds videos to the 'Uploads' playlist at the top instead of the bottom
-    rewrite_playlist_indices = models.BooleanField(null=False, default=False)
+    rewrite_playlist_indices = models.BooleanField(default=False)
     last_synchronised = models.DateTimeField(null=True, blank=True)
+    provider = models.CharField(null=False)
 
     # overrides
     auto_download = models.BooleanField(null=True, blank=True)
@@ -136,99 +141,49 @@ class Subscription(models.Model):
     def __repr__(self):
         return f'subscription {self.id}, name="{self.name}", playlist_id="{self.playlist_id}"'
 
-    def fill_from_playlist(self, info_playlist: youtube.Playlist):
-        self.name = info_playlist.title
-        self.playlist_id = info_playlist.id
-        self.description = info_playlist.description
-        self.channel_id = info_playlist.channel_id
-        self.channel_name = info_playlist.channel_title
-        self.thumbnail = youtube.best_thumbnail(info_playlist).url
-
-    def copy_from_channel(self, info_channel: youtube.Channel):
-        # No point in storing info about the 'uploads from X' playlist
-        self.name = info_channel.title
-        self.playlist_id = info_channel.uploads_playlist.id
-        self.description = info_channel.description
-        self.channel_id = info_channel.id
-        self.channel_name = info_channel.title
-        self.thumbnail = youtube.best_thumbnail(info_channel).url
-        self.rewrite_playlist_indices = True
-
-    def fetch_from_url(self, url, yt_api: youtube.YoutubeAPI):
-        url_parsed = yt_api.parse_url(url)
-        if 'playlist' in url_parsed:
-            info_playlist = yt_api.playlist(url=url)
-            if info_playlist is None:
-                raise ValueError('Invalid playlist ID!')
-
-            self.fill_from_playlist(info_playlist)
-        else:
-            info_channel = yt_api.channel(url=url)
-            if info_channel is None:
-                raise ValueError('Cannot find channel!')
-
-            self.copy_from_channel(info_channel)
-
     def delete_subscription(self, keep_downloaded_videos: bool):
         self.delete()
 
     def synchronize_now(self):
-        from YtManagerApp.management.jobs.synchronize import SynchronizeJob
-        SynchronizeJob.schedule_now_for_subscription(self)
+        self.get_provider().synchronise_channel(self)
 
-    def getUnwatchedCount(self):
+    def get_unwatched_count(self):
         return Video.objects.filter(subscription=self, watched=False).count()
+
+    def get_provider(self) -> IProvider:
+        if self.provider not in settings.INSTALLED_PROVIDERS:
+            raise Exception("Provider "+self.provider+" not loaded for subscription "+self.name+" ("+str(self.id)+")")
+        return importlib.import_module(self.provider).jobs.Jobs
 
 
 class Video(models.Model):
     video_id = models.CharField(null=False, max_length=12)
-    name = models.TextField(null=False)
+    name = models.TextField()
     description = models.TextField()
-    watched = models.BooleanField(default=False, null=False)
-    new = models.BooleanField(default=True, null=False)
+    watched = models.BooleanField(default=False)
+    new = models.BooleanField(default=True)
     downloaded_path = models.TextField(null=True, blank=True)
     subscription = models.ForeignKey(Subscription, on_delete=models.CASCADE)
-    playlist_index = models.IntegerField(null=False)
+    playlist_index = models.IntegerField()
     publish_date = models.DateTimeField(null=False)
     thumbnail = models.TextField()
     uploader_name = models.CharField(null=False, max_length=255)
-    views = models.IntegerField(null=False, default=0)
-    rating = models.FloatField(null=False, default=0.5)
-    duration = models.IntegerField(null=False, default=0)
-
-    @staticmethod
-    def create(playlist_item: youtube.PlaylistItem, subscription: Subscription):
-        video = Video()
-        video.video_id = playlist_item.resource_video_id
-        video.name = playlist_item.title
-        video.description = playlist_item.description
-        video.watched = False
-        video.new = True
-        video.downloaded_path = None
-        video.subscription = subscription
-        video.playlist_index = playlist_item.position
-        video.publish_date = playlist_item.published_at
-        video.thumbnail = youtube.best_thumbnail(playlist_item).url
-        video.save()
-        return video
+    views = models.IntegerField(default=0)
+    rating = models.FloatField(default=0.5)
+    duration = models.IntegerField(default=0)
 
     def mark_watched(self):
         self.watched = True
         self.save()
         if self.downloaded_path is not None:
-            from YtManagerApp.management.appconfig import appconfig
-            from YtManagerApp.management.jobs.delete_video import DeleteVideoJob
-            from YtManagerApp.management.jobs.synchronize import SynchronizeJob
-
             if appconfig.for_sub(self.subscription, 'automatically_delete_watched'):
-                DeleteVideoJob.schedule(self)
-                SynchronizeJob.schedule_now_for_subscription(self.subscription)
+                self.subscription.get_provider().download_video(self)
+                self.subscription.get_provider().synchronise_channel(self.subscription)
 
     def mark_unwatched(self):
-        from YtManagerApp.management.jobs.synchronize import SynchronizeJob
         self.watched = False
         self.save()
-        SynchronizeJob.schedule_now_for_subscription(self.subscription)
+        self.subscription.get_provider().synchronise_channel(self.subscription)
 
     def get_files(self):
         if self.downloaded_path is not None:
@@ -252,21 +207,16 @@ class Video(models.Model):
 
     def delete_files(self):
         if self.downloaded_path is not None:
-            from YtManagerApp.management.jobs.delete_video import DeleteVideoJob
-            from YtManagerApp.management.appconfig import appconfig
-            from YtManagerApp.management.jobs.synchronize import SynchronizeJob
-
-            DeleteVideoJob.schedule(self)
+            self.subscription.get_provider().download_video(self)
 
             # Mark watched?
             if self.subscription.user.preferences['mark_deleted_as_watched']:
                 self.watched = True
-                SynchronizeJob.schedule_now_for_subscription(self.subscription)
+                self.subscription.get_provider().synchronise_channel(self.subscription)
 
     def download(self):
         if not self.downloaded_path:
-            from YtManagerApp.management.jobs.download_video import DownloadVideoJob
-            DownloadVideoJob.schedule(self)
+            self.subscription.get_provider().download_video(self)
 
     def __str__(self):
         return self.name
@@ -310,7 +260,7 @@ class JobExecution(models.Model):
     end_date = models.DateTimeField(null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     description = models.CharField(max_length=250, null=False, default="")
-    status = models.IntegerField(choices=JOB_STATES, null=False, default=0)
+    status = models.IntegerField(choices=JOB_STATES, default=0)
 
 
 class JobMessage(models.Model):
@@ -318,5 +268,5 @@ class JobMessage(models.Model):
     job = models.ForeignKey(JobExecution, null=False, on_delete=models.CASCADE)
     progress = models.FloatField(null=True)
     message = models.CharField(max_length=1024, null=False, default="")
-    level = models.IntegerField(choices=JOB_MESSAGE_LEVELS, null=False, default=0)
-    suppress_notification = models.BooleanField(null=False, default=False)
+    level = models.IntegerField(choices=JOB_MESSAGE_LEVELS, default=0)
+    suppress_notification = models.BooleanField(default=False)
