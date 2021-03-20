@@ -1,1 +1,1 @@
-import jobs
+from . import jobs
