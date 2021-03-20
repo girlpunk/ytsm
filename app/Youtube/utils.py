@@ -1,104 +1,14 @@
-import datetime
 import re
 
 import os
 from string import Template
-from xml.etree import ElementTree
 from typing import Optional
+import logging
 
-import requests
-from django.db.models import Max
-
-from Youtube.tasks import _ENABLE_UPDATE_STATS, actual_synchronize_video, fetch_missing_thumbnails_video, __api, __log_youtube_dl
-from YtManagerApp.models import Video, Subscription
+from YtManagerApp.models import Video
 from external.pytaw.pytaw.youtube import Thumbnail, Resource
 
-
-def synchronize_video(video: Video):
-    if video.downloaded_path is not None or _ENABLE_UPDATE_STATS or video.duration == 0:
-        actual_synchronize_video.delay(video.id)
-
-    if video.thumbnail.startswith("http"):
-        fetch_missing_thumbnails_video.delay(video.id)
-
-
-def check_rss_videos(sub: Subscription):
-    found_existing_video = False
-
-    rss_request = requests.get("https://www.youtube.com/feeds/videos.xml?channel_id="+sub.channel_id)
-    rss_request.raise_for_status()
-
-    rss = ElementTree.fromstring(rss_request.content)
-    for entry in rss.findall("{http://www.w3.org/2005/Atom}entry"):
-        video_id = entry.find("{http://www.youtube.com/xml/schemas/2015}videoId").text
-        results = Video.objects.filter(video_id=video_id, subscription=sub)
-        if results.exists():
-            found_existing_video = True
-        else:
-            video_title = entry.find("{http://www.w3.org/2005/Atom}title").text
-
-            video = Video()
-            video.video_id = video_id
-            video.name = video_title
-            video.description = entry.find("{http://search.yahoo.com/mrss/}group").find("{http://search.yahoo.com/mrss/}description").text or ""
-            video.watched = False
-            video.new = True
-            video.downloaded_path = None
-            video.subscription = sub
-            video.playlist_index = 0
-            video.publish_date = datetime.datetime.fromisoformat(entry.find("{http://www.w3.org/2005/Atom}published").text)
-            video.thumbnail = entry\
-                .find("{http://search.yahoo.com/mrss/}group")\
-                .find("{http://search.yahoo.com/mrss/}thumbnail")\
-                .get("url")
-            video.rating = entry\
-                .find("{http://search.yahoo.com/mrss/}group")\
-                .find("{http://search.yahoo.com/mrss/}community")\
-                .find("{http://search.yahoo.com/mrss/}starRating")\
-                .get("average")
-            video.views = entry\
-                .find("{http://search.yahoo.com/mrss/}group")\
-                .find("{http://search.yahoo.com/mrss/}community")\
-                .find("{http://search.yahoo.com/mrss/}statistics")\
-                .get("views")
-            video.save()
-
-            synchronize_video(video)
-
-    if not found_existing_video:
-        check_all_videos(sub)
-
-
-def check_all_videos(sub: Subscription):
-    playlist_items = __api.playlist_items(sub.playlist_id)
-    if sub.rewrite_playlist_indices:
-        playlist_items = sorted(playlist_items, key=lambda x: x.published_at)
-    else:
-        playlist_items = sorted(playlist_items, key=lambda x: x.position)
-
-    for item in playlist_items:
-        results = Video.objects.filter(video_id=item.resource_video_id, subscription=sub)
-
-        if not results.exists():
-            # fix playlist index if necessary
-            if sub.rewrite_playlist_indices or Video.objects.filter(subscription=sub, playlist_index=item.position).exists():
-                highest = Video.objects.filter(subscription=sub).aggregate(Max('playlist_index'))['playlist_index__max']
-                item.position = 1 + (highest or -1)
-
-            video = Video()
-            video.video_id = item.resource_video_id
-            video.name = item.title
-            video.description = item.description
-            video.watched = False
-            video.new = True
-            video.downloaded_path = None
-            video.subscription = sub
-            video.playlist_index = item.position
-            video.publish_date = item.published_at
-            video.thumbnail = best_thumbnail(item).url
-            video.save()
-
-            synchronize_video(video)
+import youtube_dl
 
 
 def build_youtube_dl_params(video: Video):
@@ -115,7 +25,7 @@ def build_youtube_dl_params(video: Video):
     output_path = os.path.normpath(output_path)
 
     youtube_dl_params = {
-        'logger': __log_youtube_dl,
+        'logger': logging.getLogger(youtube_dl.__name__),
         'format': user.preferences['download_format'],
         'outtmpl': output_path,
         'writethumbnail': True,
