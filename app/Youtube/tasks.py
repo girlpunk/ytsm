@@ -6,9 +6,7 @@ import youtube_dl
 from celery import shared_task
 from django.db.models import Max
 
-from Youtube import youtube
-from Youtube.utils import build_youtube_dl_params, best_thumbnail
-from YtManagerApp.management.downloader import fetch_thumbnail
+from Youtube import youtube, utils
 from YtManagerApp.models import *
 from YtManagerApp.models import Video, Subscription
 from YtManagerApp.utils import first_non_null
@@ -22,7 +20,7 @@ __lock = Lock()
 @shared_task
 def synchronize_channel(channel_id: int):
     channel = Subscription.objects.get(id=channel_id)
-    __log.info("Starting synchronize "+channel.name)
+    __log.info("Starting synchronize " + channel.name)
     videos = Video.objects.filter(subscription=channel)
 
     # Remove the 'new' flag
@@ -35,8 +33,6 @@ def synchronize_channel(channel_id: int):
         check_rss_videos(channel)
     channel.last_synchronised = datetime.datetime.now()
     channel.save()
-
-    fetch_missing_thumbnails_subscription.delay(channel.id)
 
     for video in videos:
         synchronize_video(video)
@@ -71,7 +67,7 @@ def synchronize_channel(channel_id: int):
 @shared_task
 def actual_synchronize_video(video_id: int):
     video = Video.objects.get(id=video_id)
-    __log.info("Starting synchronize video "+video.video_id)
+    __log.info("Starting synchronize video " + video.video_id)
     if video.downloaded_path is not None:
         files = list(video.get_files())
 
@@ -94,9 +90,9 @@ def actual_synchronize_video(video_id: int):
             if user.preferences['mark_deleted_as_watched']:
                 video.watched = True
 
+            if video.thumb.name is None:
+                utils.load_thumbnail(video.video_id, __api.video(video.video_id), video.thumb, __log)
             video.save()
-
-    fetch_missing_thumbnails_video.delay(video.id)
 
     if _ENABLE_UPDATE_STATS or video.duration == 0:
         video_stats = __api.video(video.video_id, part='id,statistics,contentDetails')
@@ -112,22 +108,6 @@ def actual_synchronize_video(video_id: int):
         video.save()
 
 
-@shared_task
-def fetch_missing_thumbnails_subscription(obj_id: int):
-    obj = Subscription.objects.get(id=obj_id)
-    if obj.thumbnail.startswith("http"):
-        obj.thumbnail = fetch_thumbnail(obj.thumbnail, 'sub', obj.playlist_id, settings.THUMBNAIL_SIZE_SUBSCRIPTION)
-        obj.save()
-
-
-@shared_task
-def fetch_missing_thumbnails_video(obj_id: int):
-    obj = Video.objects.get(id=obj_id)
-    if obj.thumbnail.startswith("http"):
-        obj.thumbnail = fetch_thumbnail(obj.thumbnail, 'video', obj.video_id, settings.THUMBNAIL_SIZE_VIDEO)
-        obj.save()
-
-
 @shared_task()
 def download_video(video_pk: int, attempt: int = 1):
     # Issue: if multiple videos are downloaded at the same time, a race condition appears in the mkdirs() call that
@@ -140,7 +120,7 @@ def download_video(video_pk: int, attempt: int = 1):
         user = video.subscription.user
         max_attempts = user.preferences['max_download_attempts']
 
-        youtube_dl_params, output_path = build_youtube_dl_params(video)
+        youtube_dl_params, output_path = utils.build_youtube_dl_params(video)
         with youtube_dl.YoutubeDL(youtube_dl_params) as yt:
             ret = yt.download(["https://www.youtube.com/watch?v=" + video.video_id])
 
@@ -199,14 +179,14 @@ def synchronize_video(video: Video):
     if video.downloaded_path is not None or _ENABLE_UPDATE_STATS or video.duration == 0:
         actual_synchronize_video.delay(video.id)
 
-    if video.thumbnail.startswith("http"):
-        fetch_missing_thumbnails_video.delay(video.id)
+    if video.thumb.name is None:
+        utils.load_thumbnail(video.video_id, __api.video(video.video_id), video.thumb, __log)
 
 
 def check_rss_videos(sub: Subscription):
     found_existing_video = False
 
-    rss_request = requests.get("https://www.youtube.com/feeds/videos.xml?channel_id="+sub.channel_id)
+    rss_request = requests.get("https://www.youtube.com/feeds/videos.xml?channel_id=" + sub.channel_id)
     rss_request.raise_for_status()
 
     rss = ElementTree.fromstring(rss_request.content)
@@ -221,8 +201,8 @@ def check_rss_videos(sub: Subscription):
             video = Video()
             video.video_id = video_id
             video.name = video_title
-            video.description = entry.find("{http://search.yahoo.com/mrss/}group")\
-                                     .find("{http://search.yahoo.com/mrss/}description")\
+            video.description = entry.find("{http://search.yahoo.com/mrss/}group") \
+                                     .find("{http://search.yahoo.com/mrss/}description") \
                                      .text.encode("ascii", errors="ignore").decode() or ""
             video.watched = False
             video.new = True
@@ -230,19 +210,23 @@ def check_rss_videos(sub: Subscription):
             video.subscription = sub
             video.playlist_index = 0
             video.publish_date = datetime.datetime.fromisoformat(entry.find("{http://www.w3.org/2005/Atom}published").text)
-            video.thumbnail = entry\
-                .find("{http://search.yahoo.com/mrss/}group")\
-                .find("{http://search.yahoo.com/mrss/}thumbnail")\
-                .get("url")
-            video.rating = entry\
-                .find("{http://search.yahoo.com/mrss/}group")\
-                .find("{http://search.yahoo.com/mrss/}community")\
-                .find("{http://search.yahoo.com/mrss/}starRating")\
+
+            utils.load_thumbnail(video_id,
+                                 entry.find("{http://search.yahoo.com/mrss/}group")
+                                      .find("{http://search.yahoo.com/mrss/}thumbnail")
+                                      .get("url"),
+                                 video.thumb,
+                                 __log)
+
+            video.rating = entry \
+                .find("{http://search.yahoo.com/mrss/}group") \
+                .find("{http://search.yahoo.com/mrss/}community") \
+                .find("{http://search.yahoo.com/mrss/}starRating") \
                 .get("average")
-            video.views = entry\
-                .find("{http://search.yahoo.com/mrss/}group")\
-                .find("{http://search.yahoo.com/mrss/}community")\
-                .find("{http://search.yahoo.com/mrss/}statistics")\
+            video.views = entry \
+                .find("{http://search.yahoo.com/mrss/}group") \
+                .find("{http://search.yahoo.com/mrss/}community") \
+                .find("{http://search.yahoo.com/mrss/}statistics") \
                 .get("views")
             video.save()
 
@@ -278,7 +262,9 @@ def check_all_videos(sub: Subscription):
             video.subscription = sub
             video.playlist_index = item.position
             video.publish_date = item.published_at
-            video.thumbnail = best_thumbnail(item).url
+
+            utils.load_thumbnail(item.resource_video_id, item, video.thumb, __log)
+
             video.save()
 
             synchronize_video(video)

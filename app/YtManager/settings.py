@@ -196,6 +196,7 @@ INSTALLED_APPS = [
     'dynamic_preferences.users.apps.UserPreferencesConfig',
     'YtManagerApp.apps.YtManagerAppConfig',
     'crispy_forms',
+    'easy_thumbnails',
     'django.contrib.admin',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -286,8 +287,8 @@ THUMBNAIL_SIZE_SUBSCRIPTION = (250, 250)
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
-STATIC_URL = get_global_opt('StaticUrl', cfg, env_variable='YTSM_STATIC_URL', fallback='/' + URL_BASE + '/static/')
-MEDIA_URL = get_global_opt('MediaURL', cfg, env_variable='YTSM_MEDIA_URL', fallback='/' + URL_BASE + '/media/')
+STATIC_URL = get_global_opt('StaticUrl', cfg, env_variable='YTSM_STATIC_URL', fallback='/' + URL_BASE + 'static/')
+MEDIA_URL = get_global_opt('MediaURL', cfg, env_variable='YTSM_MEDIA_URL', fallback='/' + URL_BASE + 'media/')
 
 # Misc Django stuff
 

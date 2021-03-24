@@ -74,12 +74,12 @@ function tree_Ready(e, data) {
     $(this)
         .find("li")
         .filter(function(){
-            return $(this).data("unwatched-count")>0
+            return $(this).data("unwatched-count")>0;
         })
         .each(function(){
             var i = $(this);
             document.styleSheets[0].addRule(
-                '#'+i.attr('id')+' > i:after',
+                `#${i.attr('id')} > i:after`,
                 `
                     position: absolute;
                     right: 0%;
@@ -217,8 +217,8 @@ function videos_markallwatched(btn, url)
     $.post({
         url: url+urls.join(),
         data: {csrfmiddlewaretoken: '{{ csrf_token }}'},
-        complete : function () {
-            $(btn)[0].innerHTML="Done";
+        complete() {
+            $(btn)[0].innerHTML = "Done";
         }
     })
 }

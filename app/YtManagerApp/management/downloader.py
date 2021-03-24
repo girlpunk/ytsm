@@ -1,12 +1,6 @@
 import logging
-import mimetypes
-from urllib.parse import urljoin
 
-import PIL.Image
-import PIL.ImageOps
 import os
-import requests
-from django.conf import settings as srv_settings
 from django.contrib.auth.models import User
 
 from YtManagerApp.models import Video, Subscription, VIDEO_ORDER_MAPPING
@@ -64,53 +58,3 @@ def downloader_process_subscription(sub: Subscription):
 def downloader_process_all():
     for subscription in Subscription.objects.all():
         downloader_process_subscription(subscription)
-
-
-def fetch_thumbnail(url, object_type, identifier, thumb_size):
-
-    log.info('Fetching thumbnail url=%s object_type=%s identifier=%s', url, object_type, identifier)
-
-    # Make request to obtain mime type
-    try:
-        response = requests.get(url, stream=True)
-    except requests.exceptions.RequestException as e:
-        log.error('Failed to fetch thumbnail %s. Error: %s', url, e)
-        return url
-
-    ext = mimetypes.guess_extension(response.headers['Content-Type'])
-
-    # Build file path
-    file_name = f"{identifier}{ext}"
-    abs_path_dir = os.path.join(srv_settings.MEDIA_ROOT, "thumbs", object_type)
-    abs_path = os.path.join(abs_path_dir, file_name)
-    abs_path_tmp = file_name + '.tmp'
-
-    log.info("Saving thumbnail to %s", abs_path)
-
-    # Store image
-    try:
-        os.makedirs(abs_path_dir, exist_ok=True)
-        with open(abs_path_tmp, "wb") as f:
-            for chunk in response.iter_content(chunk_size=1024):
-                if chunk:
-                    f.write(chunk)
-
-        # Resize and crop to thumbnail size
-        image = PIL.Image.open(abs_path_tmp)
-        image = PIL.ImageOps.fit(image, thumb_size)
-        image.save(abs_path)
-        image.close()
-
-        # Delete temp file
-        os.unlink(abs_path_tmp)
-
-    except requests.exceptions.RequestException as e:
-        log.error('Error while downloading stream for thumbnail %s. Error: %s', url, e)
-        return url
-    except OSError as e:
-        log.error('Error while writing to file %s for thumbnail %s. Error: %s', abs_path, url, e)
-        return url
-
-    # Return
-    media_url = urljoin(srv_settings.MEDIA_URL, f"thumbs/{object_type}/{file_name}")
-    return media_url

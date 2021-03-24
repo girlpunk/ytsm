@@ -120,6 +120,7 @@ class Subscription(models.Model):
     channel_id = models.CharField(max_length=128)
     channel_name = models.CharField(max_length=1024)
     thumbnail = models.CharField(max_length=1024)
+    thumb = models.ImageField(upload_to="thumbnails/sub", null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     # youtube adds videos to the 'Uploads' playlist at the top instead of the bottom
     rewrite_playlist_indices = models.BooleanField(default=False)
@@ -167,6 +168,7 @@ class Video(models.Model):
     playlist_index = models.IntegerField()
     publish_date = models.DateTimeField(null=False)
     thumbnail = models.TextField()
+    thumb = models.ImageField(upload_to="thumbnails/video", null=True)
     uploader_name = models.CharField(null=False, max_length=255)
     views = models.IntegerField(default=0)
     rating = models.FloatField(default=0.5)

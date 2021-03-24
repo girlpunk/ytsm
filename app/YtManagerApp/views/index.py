@@ -161,7 +161,7 @@ def ajax_get_tree(request: HttpRequest):
                 "id": __tree_sub_id(node.id),
                 "type": "sub",
                 "text": node.name,
-                "icon": node.thumbnail,
+                "icon": node.thumb.url,
                 "parent": __tree_folder_id(node.parent_folder_id),
                 "li_attr": {"data-unwatched-count": unwatched}
             }

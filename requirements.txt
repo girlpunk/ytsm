@@ -1,8 +1,7 @@
 pytz
 requests
 apscheduler
-#gunicorn
-django 
+django
 django-crispy-forms 
 django-dynamic-preferences
 dj_database_url
@@ -10,7 +9,6 @@ youtube-dl
 google-api-python-client 
 google_auth_oauthlib 
 oauth2client
-#psycopg2-binary
 python-dateutil
 Pillow
 channels
@@ -21,3 +19,4 @@ whitenoise
 mysqlclient
 uvicorn[standard]
 Twisted<21
+easy_thumbnails

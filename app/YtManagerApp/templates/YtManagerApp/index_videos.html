@@ -1,3 +1,4 @@
+{% load thumbnail %}
 {% load humanize %}
 {% load ratings %}
 
@@ -16,7 +17,7 @@
                 <div class="card mx-auto">
                     <a href="{% url 'video' video.id %}" target="_blank">
                         <div>
-                            <img class="card-img-top {% if video.watched %}muted{% endif %}" src="{{ video.thumbnail }}" alt="Thumbnail">
+                            <img class="card-img-top {% if video.watched %}muted{% endif %}" src="{% thumbnail video.thumb 410x230 %}" alt="Thumbnail">
                             <div class="video-badges">
                                 {% if video.new and not video.watched %}
                                     <div class="video-badge video-badge-new">New</div>

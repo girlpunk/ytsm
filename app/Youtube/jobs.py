@@ -1,9 +1,9 @@
+import logging
 from external.pytaw.pytaw.youtube import InvalidURL
 
 from Youtube import tasks, youtube, utils
 from YtManagerApp.IProvider import IProvider
 from YtManagerApp.models import Video, Subscription
-
 
 class Jobs(IProvider):
     @staticmethod
@@ -39,10 +39,11 @@ class Jobs(IProvider):
             if info_playlist is None:
                 raise ValueError('Invalid playlist ID!')
 
-            utils.fill_from_playlist(subscription, info_playlist)
+            utils.fill_from_playlist(subscription, info_playlist, logging.getLogger(__name__))
         else:
             info_channel = yt_api.channel(url=url)
             if info_channel is None:
                 raise ValueError('Cannot find channel!')
 
-            utils.copy_from_channel(subscription, info_channel)
+            utils.copy_from_channel(subscription, info_channel, logging.getLogger(__name__))
+        subscription.save()
