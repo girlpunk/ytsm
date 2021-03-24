@@ -204,7 +204,7 @@ function videos_Submit(e)
         e.preventDefault();
 }
 
-function videos_markallwatched(btn)
+function videos_markallwatched(btn, url)
 {
     $(btn)[0].innerHTML="<span class='typcn typcn-arrow-sync'></span>";
 
@@ -215,7 +215,7 @@ function videos_markallwatched(btn)
     });
 
     $.post({
-        url: "/ytsm/ajax/action/mark_video_watched/"+urls.join(),
+        url: url+urls.join(),
         data: {csrfmiddlewaretoken: '{{ csrf_token }}'},
         complete : function () {
             $(btn)[0].innerHTML="Done";
