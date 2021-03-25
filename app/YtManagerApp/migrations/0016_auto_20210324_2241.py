@@ -16,12 +16,15 @@ def create_subscription_images(apps, schema_editor):
         os.makedirs(os.path.join(settings.MEDIA_ROOT, 'thumbs/sub/'))
     subscription_model: Subscription = apps.get_model('YtManagerApp', 'Subscription')
     for subscription in subscription_model.objects.all():
-        f = open(os.path.join(settings.MEDIA_ROOT, subscription.thumbnail.replace(settings.MEDIA_URL, "")))
-        myimage = File(f)
-        subscription.thumb.save("", myimage)
-        subscription.save()
-        f.close()
-        os.unlink(os.path.join(settings.MEDIA_ROOT, subscription.thumbnail.replace(settings.MEDIA_URL, "")))
+        try:
+            f = open(os.path.join(settings.MEDIA_ROOT, subscription.thumbnail.replace(settings.MEDIA_URL, "")))
+            myimage = File(f)
+            subscription.thumb.save("", myimage)
+            subscription.save()
+            f.close()
+            os.unlink(os.path.join(settings.MEDIA_ROOT, subscription.thumbnail.replace(settings.MEDIA_URL, "")))
+        except FileNotFoundError:
+            pass
 
 
 def create_video_images(apps, schema_editor):
@@ -29,12 +32,15 @@ def create_video_images(apps, schema_editor):
         os.makedirs(os.path.join(settings.MEDIA_ROOT, 'thumbs/video/'))
     video_model: Video = apps.get_model('YtManagerApp', 'Video')
     for video in video_model.objects.all():
-        f = open(os.path.join(settings.MEDIA_ROOT, video.thumbnail.replace(settings.MEDIA_URL, "")))
-        myimage = File(f)
-        video.thumb.save("", myimage)
-        video.save()
-        f.close()
-        os.unlink(os.path.join(settings.MEDIA_ROOT, subscription.thumbnail.replace(settings.MEDIA_URL, "")))
+        try:
+            f = open(os.path.join(settings.MEDIA_ROOT, video.thumbnail.replace(settings.MEDIA_URL, "")))
+            myimage = File(f)
+            video.thumb.save("", myimage)
+            video.save()
+            f.close()
+            os.unlink(os.path.join(settings.MEDIA_ROOT, subscription.thumbnail.replace(settings.MEDIA_URL, "")))
+        except FileNotFoundError:
+            pass
 
 
 class Migration(migrations.Migration):
