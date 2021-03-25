@@ -4,28 +4,35 @@ from django.conf import settings
 from django.core.files import File
 from django.db import migrations, models
 from typing import TYPE_CHECKING
-import os.path
+import os
 
 if TYPE_CHECKING:
-    from YtManagerApp.models import Subscription as SubscriptionModel
-    from YtManagerApp.models import Video as VideoModel
+    from YtManagerApp.models import Subscription
+    from YtManagerApp.models import Video
 
 
 def create_subscription_images(apps, schema_editor):
-    Subscription: SubscriptionModel = apps.get_model('YtManagerApp', 'Subscription')
-    for subscription in Subscription.objects.all():
+    os.makedirs(os.path.join(settings.MEDIA_ROOT, 'thumbs/sub/'))
+    subscription_model: Subscription = apps.get_model('YtManagerApp', 'Subscription')
+    for subscription in subscription_model.objects.all():
         f = open(os.path.join(settings.MEDIA_ROOT, subscription.thumbnail.replace(settings.MEDIA_URL, "")))
         myimage = File(f)
         subscription.thumb.save("", myimage)
         subscription.save()
+        f.close()
+        os.unlink(os.path.join(settings.MEDIA_ROOT, subscription.thumbnail.replace(settings.MEDIA_URL, "")))
+
 
 def create_video_images(apps, schema_editor):
-    Video: VideoModel = apps.get_model('YtManagerApp', 'Video')
-    for video in Video.objects.all():
+    os.makedirs(os.path.join(settings.MEDIA_ROOT, 'thumbs/video/'))
+    video_model: Video = apps.get_model('YtManagerApp', 'Video')
+    for video in video_model.objects.all():
         f = open(os.path.join(settings.MEDIA_ROOT, video.thumbnail.replace(settings.MEDIA_URL, "")))
         myimage = File(f)
         video.thumb.save("", myimage)
         video.save()
+        f.close()
+        os.unlink(os.path.join(settings.MEDIA_ROOT, subscription.thumbnail.replace(settings.MEDIA_URL, "")))
 
 
 class Migration(migrations.Migration):
