@@ -125,7 +125,7 @@ def copy_from_channel(subscription: Subscription, info_channel: Channel, log):
     subscription.save()
 
 
-def load_thumbnail(item_id: str, url: Union[Resource, str], field: ImageFieldFile, log: logging.Logger):
+def load_thumbnail(item_id: str, url: Union[Resource, str], field: 'ImageFieldFile', log: logging.Logger):
     if url is Resource:
         url = best_thumbnail(url).url
     try:
