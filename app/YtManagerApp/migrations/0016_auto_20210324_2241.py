@@ -31,7 +31,6 @@ def create_video_images(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        migrations.swappable_dependency(settings.FILER_IMAGE_MODEL),
         ('YtManagerApp', '0015_subscription_provider'),
     ]
 
