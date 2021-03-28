@@ -10,13 +10,15 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
-import os
-import sys
 import logging
-from os.path import dirname as up
+import sys
 from configparser import ConfigParser
-from YtManagerApp.utils.extended_interpolation_with_env import ExtendedInterpolatorWithEnv
+from os.path import dirname as up
+
 import dj_database_url
+import os
+
+from YtManagerApp.utils.extended_interpolation_with_env import ExtendedInterpolatorWithEnv
 
 #
 # Directories
@@ -38,8 +40,6 @@ print("Using media root: " + MEDIA_ROOT)
 #
 # Defaults
 #
-_DEFAULT_DEBUG = False
-
 _DEFAULT_SECRET_KEY = '^zv8@i2h!ko2lo=%ivq(9e#x=%q*i^^)6#4@(juzdx%&0c+9a0'
 
 _DEFAULT_DATABASE = {
@@ -136,7 +136,7 @@ if cfg_file not in read_ok:
 
 # Debug
 # global DEBUG
-DEBUG = get_global_opt('Debug', cfg, env_variable='YTSM_DEBUG', fallback=_DEFAULT_DEBUG, boolean=True)
+DEBUG = get_global_opt('Debug', cfg, env_variable='YTSM_DEBUG', fallback=False, boolean=True)
 
 # Secret key
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -205,11 +205,13 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'channels',
     'django_celery_results',
+    'debug_toolbar'
 ]
 
 INSTALLED_APPS += INSTALLED_PROVIDERS
 
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -298,3 +300,5 @@ LOG_FORMAT = '%(asctime)s|%(process)d|%(thread)d|%(name)s|%(filename)s|%(lineno)
 CONSOLE_LOG_FORMAT = '%(asctime)s | %(name)s | %(filename)s:%(lineno)d | %(levelname)s | %(message)s'
 
 ASGI_APPLICATION = 'YtManager.routing.application'
+
+INTERNAL_IPS = get_global_opt('InternalIPs', cfg, env_variable='YTSM_INTERNAL_IP', fallback='').split(",")
