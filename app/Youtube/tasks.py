@@ -27,6 +27,7 @@ def synchronize_channel(channel_id: int):
 
     # Remove the 'new' flag
     videos.update(new=False)
+    utils.load_resource_thumbnail(channel.playlist_id, __api.channel(channel.channel_id), channel.thumb, __log)
 
     __log.info("Starting check new videos " + channel.name)
     if channel.last_synchronised is None:
@@ -238,8 +239,6 @@ def check_rss_videos(sub: Subscription):
 
 
 def check_all_videos(sub: Subscription):
-    utils.load_resource_thumbnail(sub.playlist_id, __api.channel(sub.channel_id), sub.thumb, __log)
-
     playlist_items: List[APIVideo] = __api.playlist_items(sub.playlist_id)
     if sub.rewrite_playlist_indices:
         playlist_items = sorted(playlist_items, key=lambda x: x.published_at)
