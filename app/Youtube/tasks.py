@@ -46,7 +46,7 @@ def synchronize_channel(channel_id: int):
         order = VIDEO_ORDER_MAPPING[order]
 
         videos_to_download = Video.objects \
-            .filter(subscription=channel, downloaded_path__isnull=True, watched=False) \
+            .filter(subscription=channel, downloaded_path__isnull=True, watched=False, subscription__auto_download=True) \
             .order_by(order)
 
         if global_limit > 0:

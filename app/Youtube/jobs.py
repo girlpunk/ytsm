@@ -5,6 +5,7 @@ from Youtube import tasks, youtube, utils
 from YtManagerApp.IProvider import IProvider
 from YtManagerApp.models import Video, Subscription
 
+
 class Jobs(IProvider):
     @staticmethod
     def synchronise_channel(subscription: Subscription):
