@@ -58,4 +58,3 @@ def star_rating_tag(parser, token):
         return StarRatingNode(parts[1])
 
     return StarRatingNode(parts[1], parts[2])
-

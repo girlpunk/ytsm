@@ -4,6 +4,7 @@ from external.pytaw.pytaw.youtube import InvalidURL
 from Youtube import tasks, youtube, utils
 from YtManagerApp.IProvider import IProvider
 from YtManagerApp.models import Video, Subscription
+from external.pytaw.pytaw.youtube import Channel, Playlist
 
 
 class Jobs(IProvider):
@@ -33,16 +34,16 @@ class Jobs(IProvider):
     def process_url(url: str, subscription: Subscription):
         yt_api: youtube.YoutubeAPI = youtube.YoutubeAPI.build_public()
 
-        url_parsed = yt_api.parse_url(url)
+        url_parsed: dict = yt_api.parse_url(url)
 
         if 'playlist' in url_parsed:
-            info_playlist = yt_api.playlist(url=url)
+            info_playlist: Playlist = yt_api.playlist(url=url)
             if info_playlist is None:
                 raise ValueError('Invalid playlist ID!')
 
             utils.fill_from_playlist(subscription, info_playlist, logging.getLogger(__name__))
         else:
-            info_channel = yt_api.channel(url=url)
+            info_channel: Channel = yt_api.channel(url=url)
             if info_channel is None:
                 raise ValueError('Cannot find channel!')
 

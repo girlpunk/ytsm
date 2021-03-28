@@ -41,7 +41,7 @@ class EventConsumer(WebsocketConsumer):
             self.jobs()
 
     def jobs(self):
-        #TODO: User filtering
+        # TODO: User filtering
 
         sync_all_tasks = django_celery_results.models.TaskResult.objects.filter(
             task_name="YtManagerApp.tasks.synchronize_all",

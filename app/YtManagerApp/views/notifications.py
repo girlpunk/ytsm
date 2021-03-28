@@ -6,9 +6,12 @@ import datetime
 import collections
 import django_celery_results
 
+
 @login_required
 def ajax_get_running_jobs(request: HttpRequest):
-    sync_all_tasks = django_celery_results.models.TaskResult.objects.filter(task_name="YtManagerApp.tasks.synchronize_all", date_created__gte=datetime.datetime.now()-datetime.timedelta(days=1))
+    sync_all_tasks = django_celery_results.models\
+        .TaskResult.objects\
+        .filter(task_name="YtManagerApp.tasks.synchronize_all", date_created__gte=datetime.datetime.now()-datetime.timedelta(days=1))
 
     all_children = []
     response = []
@@ -40,7 +43,8 @@ def ajax_get_running_jobs(request: HttpRequest):
             'message': str(complete_tasks) + " / " + str(all_tasks)
         }]
 
-    sync_other_tasks = django_celery_results.models.TaskResult.objects.filter(date_done__isnull=True).exclude(task_id__in=all_children)
+    sync_other_tasks = django_celery_results.models.TaskResult.objects\
+        .filter(date_done__isnull=True).exclude(task_id__in=all_children)
 
     for taskResult in sync_other_tasks:
         task = AsyncResult(taskResult.task_id)
@@ -65,6 +69,7 @@ def ajax_get_running_jobs(request: HttpRequest):
 
     return JsonResponse(response, safe=False)
 
+
 def flatten(item_list):
     for el in item_list:
         if isinstance(el, collections.Iterable) and not isinstance(el, (str, bytes)):
@@ -77,4 +82,3 @@ def get_all_children(t):
     if t.children is None:
         return [t]
     return [t] + [get_all_children(b) for b in t.children]
-
