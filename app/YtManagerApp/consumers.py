@@ -24,11 +24,11 @@ def get_all_children(t):
 class EventConsumer(WebsocketConsumer):
     http_user = True
 
-    def receive(self, text=None, bytes=None, **kwargs):
-        if text:
-            text_data_json = json.loads(text)
-        elif bytes:
-            text_data_json = json.loads(bytes)
+    def receive(self, text_data=None, bytes_data=None, **kwargs):
+        if text_data:
+            text_data_json = json.loads(text_data)
+        elif bytes_data:
+            text_data_json = json.loads(bytes_data)
         else:
             self.send(text_data=json.dumps({
                 'request': 'error',
