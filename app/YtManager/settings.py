@@ -304,5 +304,5 @@ ASGI_APPLICATION = 'YtManager.routing.application'
 INTERNAL_IPS = get_global_opt('InternalIPs', cfg, env_variable='YTSM_INTERNAL_IP', fallback='').split(",")
 
 DEBUG_TOOLBAR_CONFIG = {
-    "RENDER_PANELS": True
+    "RENDER_PANELS": False
 }
