@@ -9,7 +9,9 @@ from django.db.models import Max
 from Youtube import youtube, utils
 from YtManagerApp.models import *
 from YtManagerApp.models import Video, Subscription
+from external.pytaw.pytaw.youtube import Video as APIVideo
 from YtManagerApp.utils import first_non_null
+from typing import List
 
 __log = logging.getLogger(__name__)
 _ENABLE_UPDATE_STATS = False
@@ -19,7 +21,7 @@ __lock = Lock()
 
 @shared_task
 def synchronize_channel(channel_id: int):
-    channel = Subscription.objects.get(id=channel_id)
+    channel: Subscription = Subscription.objects.get(id=channel_id)
     __log.info("Starting synchronize " + channel.name)
     videos = Video.objects.filter(subscription=channel)
 
@@ -89,10 +91,6 @@ def actual_synchronize_video(video_id: int):
             user = video.subscription.user
             if user.preferences['mark_deleted_as_watched']:
                 video.watched = True
-
-            if video.thumb.name is None:
-                utils.load_thumbnail(video.video_id, __api.video(video.video_id), video.thumb, __log)
-            video.save()
 
     if _ENABLE_UPDATE_STATS or video.duration == 0:
         video_stats = __api.video(video.video_id, part='id,statistics,contentDetails')
@@ -179,8 +177,8 @@ def synchronize_video(video: Video):
     if video.downloaded_path is not None or _ENABLE_UPDATE_STATS or video.duration == 0:
         actual_synchronize_video.delay(video.id)
 
-    if video.thumb.name is None:
-        utils.load_thumbnail(video.video_id, __api.video(video.video_id), video.thumb, __log)
+    if not video.thumb:
+        utils.load_resource_thumbnail(video.video_id, __api.video(video.video_id), video.thumb, __log)
 
 
 def check_rss_videos(sub: Subscription):
@@ -211,12 +209,12 @@ def check_rss_videos(sub: Subscription):
             video.playlist_index = 0
             video.publish_date = datetime.datetime.fromisoformat(entry.find("{http://www.w3.org/2005/Atom}published").text)
 
-            utils.load_thumbnail(video_id,
-                                 entry.find("{http://search.yahoo.com/mrss/}group")
-                                      .find("{http://search.yahoo.com/mrss/}thumbnail")
-                                      .get("url"),
-                                 video.thumb,
-                                 __log)
+            utils.load_url_thumbnail(video_id,
+                                     entry.find("{http://search.yahoo.com/mrss/}group")
+                                          .find("{http://search.yahoo.com/mrss/}thumbnail")
+                                          .get("url"),
+                                     video.thumb,
+                                     __log)
 
             video.rating = entry \
                 .find("{http://search.yahoo.com/mrss/}group") \
@@ -237,7 +235,9 @@ def check_rss_videos(sub: Subscription):
 
 
 def check_all_videos(sub: Subscription):
-    playlist_items = __api.playlist_items(sub.playlist_id)
+    utils.load_resource_thumbnail(sub.playlist_id, __api.channel(sub.channel_id), sub.thumb, __log)
+
+    playlist_items: List[APIVideo] = __api.playlist_items(sub.playlist_id)
     if sub.rewrite_playlist_indices:
         playlist_items = sorted(playlist_items, key=lambda x: x.published_at)
     else:
@@ -263,7 +263,7 @@ def check_all_videos(sub: Subscription):
             video.playlist_index = item.position
             video.publish_date = item.published_at
 
-            utils.load_thumbnail(item.resource_video_id, item, video.thumb, __log)
+            utils.load_resource_thumbnail(item.resource_video_id, item, video.thumb, __log)
 
             video.save()
 

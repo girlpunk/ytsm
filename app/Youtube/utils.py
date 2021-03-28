@@ -1,19 +1,15 @@
+import logging
 import mimetypes
-
-import re
+from string import Template
+from typing import Optional, TYPE_CHECKING
 
 import os
-from string import Template
-from typing import Optional, Union
-import logging
-
+import re
 import requests
-
-from YtManagerApp.models import Video, Subscription
+import youtube_dl
 from external.pytaw.pytaw.youtube import Thumbnail, Resource, Channel, Playlist
 
-import youtube_dl
-from typing import TYPE_CHECKING
+from YtManagerApp.models import Video, Subscription
 
 if TYPE_CHECKING:
     from django.db.models.fields.files import ImageFieldFile
@@ -106,7 +102,7 @@ def fill_from_playlist(subscription: Subscription, info_playlist: Playlist, log)
     subscription.channel_id = info_playlist.channel_id
     subscription.channel_name = info_playlist.channel_title
 
-    load_thumbnail(info_playlist.id, info_playlist, subscription.thumb, log)
+    load_resource_thumbnail(info_playlist.id, info_playlist, subscription.thumb, log)
 
     subscription.save()
 
@@ -120,19 +116,21 @@ def copy_from_channel(subscription: Subscription, info_channel: Channel, log):
     subscription.channel_name = info_channel.title
     subscription.rewrite_playlist_indices = True
 
-    load_thumbnail(info_channel.id, info_channel, subscription.thumb, log)
+    load_resource_thumbnail(info_channel.id, info_channel, subscription.thumb, log)
 
     subscription.save()
 
 
-def load_thumbnail(item_id: str, url: Union[Resource, str], field: 'ImageFieldFile', log: logging.Logger):
-    if url is Resource:
-        url = best_thumbnail(url).url
+def load_resource_thumbnail(item_id: str, url: Resource, field: 'ImageFieldFile', log: logging.Logger):
+    load_url_thumbnail(item_id, best_thumbnail(url).url, field, log)
+
+
+def load_url_thumbnail(item_id: str, url: str, field: 'ImageFieldFile', log: logging.Logger):
     try:
         response = requests.get(url, stream=True)
         ext = mimetypes.guess_extension(response.headers['Content-Type'])
         file_name = f"{item_id}{ext}"
 
-        field.save(file_name, response.content)
+        field.save(file_name, response.raw)
     except requests.exceptions.RequestException as e:
         log.error('Error while downloading stream for thumbnail %s. Error: %s', url, e)
