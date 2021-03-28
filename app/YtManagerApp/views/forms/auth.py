@@ -17,6 +17,15 @@ class ExtendedAuthenticationForm(AuthenticationForm):
 
         request.session.set_expiry(expiry)
 
+    def form_valid(self, form):
+        remember_me = form.cleaned_data['remember_me']  # get remember me data from cleaned_data of form
+        if remember_me:
+            self.request.session.set_expiry(3600 * 24 * 30)
+        else:
+            self.request.session.set_expiry(0)
+        self.request.session.modified = True
+        return super(ExtendedAuthenticationForm, self).form_valid(form)
+
 
 class ExtendedUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=False,
