@@ -302,7 +302,3 @@ CONSOLE_LOG_FORMAT = '%(asctime)s | %(name)s | %(filename)s:%(lineno)d | %(level
 ASGI_APPLICATION = 'YtManager.routing.application'
 
 INTERNAL_IPS = get_global_opt('InternalIPs', cfg, env_variable='YTSM_INTERNAL_IP', fallback='').split(",")
-
-DEBUG_TOOLBAR_CONFIG = {
-    "RENDER_PANELS": False
-}

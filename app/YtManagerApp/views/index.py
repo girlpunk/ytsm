@@ -206,7 +206,7 @@ def ajax_get_tree_debug(request: HttpRequest):
             }
 
     result = SubscriptionFolder.traverse(None, request.user, visit)
-    return HttpResponse(json.dumps(result), safe=False)
+    return HttpResponse(json.dumps(result))
 
 
 @login_required
