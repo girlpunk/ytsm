@@ -71,7 +71,10 @@ def actual_synchronize_video(video_id: int):
     video = Video.objects.get(id=video_id)
     __log.info("Starting synchronize video " + video.video_id)
     if video.downloaded_path is not None:
-        files = list(video.get_files())
+        try:
+            files = list(video.get_files())
+        except FileNotFoundError:
+            files = []
 
         # Try to find a valid video file
         found_video = False
