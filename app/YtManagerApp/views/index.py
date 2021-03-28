@@ -1,13 +1,15 @@
 from math import log, floor
 
 import importlib
+
+import json
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Field, HTML
 from django import forms
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q, Sum
-from django.http import HttpRequest, HttpResponseBadRequest, JsonResponse
+from django.http import HttpRequest, HttpResponseBadRequest, JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.views.generic import CreateView, UpdateView, DeleteView, FormView
 from django.views.generic.edit import FormMixin
@@ -171,32 +173,71 @@ def ajax_get_tree(request: HttpRequest):
 
 
 @login_required
+def ajax_get_tree_debug(request: HttpRequest):
+    def human_format(number):
+        units = ['', 'K', 'M', 'G', 'T', 'P']
+        k = 1000.0
+        magnitude = int(floor(log(number, k)))
+        if magnitude > 0:
+            return '{0:.2}{1:s}'.format(number / k**magnitude, units[magnitude])
+        else:
+            return '{0}'.format(number)
+
+    def visit(node):
+        if isinstance(node, SubscriptionFolder):
+            unwatched = node.get_unwatched_count()
+            return {
+                "id": __tree_folder_id(node.id),
+                "text": node.name,
+                "type": "folder",
+                "state": {"opened": True},
+                "parent": __tree_folder_id(node.parent_id),
+                "li_attr": {"data-unwatched-count": unwatched}
+            }
+        elif isinstance(node, Subscription):
+            unwatched = node.get_unwatched_count()
+            return {
+                "id": __tree_sub_id(node.id),
+                "type": "sub",
+                "text": node.name,
+                "icon": node.thumb.url if node.thumb else None,
+                "parent": __tree_folder_id(node.parent_folder_id),
+                "li_attr": {"data-unwatched-count": unwatched}
+            }
+
+    result = SubscriptionFolder.traverse(None, request.user, visit)
+    return HttpResponse(json.dumps(result), safe=False)
+
+
+@login_required
 def ajax_get_videos(request: HttpRequest):
     if request.method == 'POST':
         form = VideoFilterForm(request.POST)
-        if form.is_valid():
-            videos = get_videos(
-                user=request.user,
-                sort_order=form.cleaned_data['sort'],
-                query=form.cleaned_data['query'],
-                subscription_id=form.cleaned_data['subscription_id'],
-                folder_id=form.cleaned_data['folder_id'],
-                only_watched=form.cleaned_data['show_watched'],
-                only_downloaded=form.cleaned_data['show_downloaded']
-            )
+    else:
+        form = VideoFilterForm(request.GET)
+    if form.is_valid():
+        videos = get_videos(
+            user=request.user,
+            sort_order=form.cleaned_data['sort'],
+            query=form.cleaned_data['query'],
+            subscription_id=form.cleaned_data['subscription_id'],
+            folder_id=form.cleaned_data['folder_id'],
+            only_watched=form.cleaned_data['show_watched'],
+            only_downloaded=form.cleaned_data['show_downloaded']
+        )
 
-            duration_raw = videos.aggregate(Sum('duration'))['duration__sum'] or 0
-            duration = str(datetime.timedelta(seconds=duration_raw))
+        duration_raw = videos.aggregate(Sum('duration'))['duration__sum'] or 0
+        duration = str(datetime.timedelta(seconds=duration_raw))
 
-            paginator = Paginator(videos, form.cleaned_data['results_per_page'])
-            videos = paginator.get_page(form.cleaned_data['page'])
+        paginator = Paginator(videos, form.cleaned_data['results_per_page'])
+        videos = paginator.get_page(form.cleaned_data['page'])
 
-            context = {
-                'videos': videos,
-                'duration': duration
-            }
+        context = {
+            'videos': videos,
+            'duration': duration
+        }
 
-            return render(request, 'YtManagerApp/index_videos.html', context)
+        return render(request, 'YtManagerApp/index_videos.html', context)
 
     return HttpResponseBadRequest()
 
