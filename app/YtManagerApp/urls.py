@@ -23,7 +23,7 @@ from .views.actions import SyncNowView, DeleteVideoFilesView, DownloadVideoFiles
     MarkVideoUnwatchedView
 from .views.auth import ExtendedLoginView, RegisterView, RegisterDoneView
 from .views.index import index, ajax_get_tree, ajax_get_videos, CreateFolderModal, UpdateFolderModal, DeleteFolderModal, \
-    CreateSubscriptionModal, UpdateSubscriptionModal, DeleteSubscriptionModal, ImportSubscriptionsModal, ajax_get_tree_debug
+    CreateSubscriptionModal, UpdateSubscriptionModal, DeleteSubscriptionModal, ImportSubscriptionsModal, ajax_get_tree_debug, ajax_get_video_shuffle
 from .views.notifications import ajax_get_running_jobs
 from .views.settings import SettingsView, AdminSettingsView
 from .views.video import VideoDetailView, video_detail_view
