@@ -250,7 +250,7 @@ def ajax_get_video_shuffle(request: HttpRequest):
     videos: List[Video] = []
 
     for subscription in Subscription.objects.all():
-        video = subscription.video_set.filter(watched=False, duration__lte=time_remaining).first()
+        video = subscription.video_set.filter(watched=False, duration__lte=time_remaining).order_by('-publish_date').first()
         if video:
             time_remaining -= video.duration
             videos.append(video)
