@@ -209,13 +209,11 @@ class Video(models.Model):
         return None, None
 
     def delete_files(self):
-        if self.downloaded_path is not None:
-            # self.subscription.get_provider().download_video(self)
-
-            # Mark watched?
-            if self.subscription.user.preferences['mark_deleted_as_watched']:
-                self.watched = True
-                self.subscription.get_provider().synchronise_channel(self.subscription)
+        for file in self.get_files():
+            os.unlink(file)
+        self.downloaded_path = None
+        self.save()
+        self.subscription.get_provider().synchronise_channel(self.subscription)
 
     def download(self):
         if not self.downloaded_path:
