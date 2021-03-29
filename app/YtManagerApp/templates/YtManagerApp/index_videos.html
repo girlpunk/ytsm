@@ -5,8 +5,8 @@
 {% if videos %}
 <div class="row">
     <a class="btn btn-secondary" href="{% url 'video' videos.0.id %}?next={% for video in videos|slice:"1:" %}{{video.id}}{% if not forloop.last %},{% endif %}{% endfor %}">Watch All Now</a>&nbsp;
-    <a class="btn btn-secondary" onclick="videos_markallwatched(this, {% url 'ajax_action_mark_video_watched' None %})" href="#">Mark All as Watched</a>&nbsp;
-    <span class="btn btn-secondary">{{duration}} Total</span>
+    <a class="btn btn-secondary" onclick="videos_markallwatched(this, {% url 'ajax_action_mark_video_watched' None %})" href="#">Mark All as Watched</a>&nbsp
+    <span class="btn btn-secondary">{{duration}} Total</span>&nbsp;
     <a class="btn btn-secondary" href="{% url 'ajax_get_video_shuffle' %}"><span class="typcn typcn-arrow-shuffle"></span></a>
 </div>
 {% endif %}

@@ -1,33 +1,31 @@
-from math import log, floor
-
+import datetime
 import importlib
-
 import json
+import logging
+from math import log, floor
+from typing import List
+
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Field, HTML
 from django import forms
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import Paginator
 from django.db.models import Q, Sum
 from django.http import HttpRequest, HttpResponseBadRequest, JsonResponse, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
+from django.urls import reverse
+from django.utils.http import urlencode
 from django.views.generic import CreateView, UpdateView, DeleteView, FormView
 from django.views.generic.edit import FormMixin
-from django.conf import settings
-from django.core.paginator import Paginator
-from django.utils.http import urlencode
 
 from YtManagerApp.IProvider import IProvider
-from YtManagerApp.management.videos import get_videos
 from YtManagerApp.management.appconfig import appconfig
+from YtManagerApp.management.videos import get_videos
 from YtManagerApp.models import Subscription, SubscriptionFolder, Video, VIDEO_ORDER_CHOICES, VIDEO_ORDER_MAPPING
 from YtManagerApp.utils import subscription_file_parser
 from YtManagerApp.views.controls.modal import ModalMixin
-
-from typing import List
-
-import logging
-import datetime
 
 
 class VideoFilterForm(forms.Form):
