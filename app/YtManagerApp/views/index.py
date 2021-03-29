@@ -9,19 +9,22 @@ from django import forms
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q, Sum
-from django.http import HttpRequest, HttpResponseBadRequest, JsonResponse, HttpResponse
+from django.http import HttpRequest, HttpResponseBadRequest, JsonResponse, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.views.generic import CreateView, UpdateView, DeleteView, FormView
 from django.views.generic.edit import FormMixin
 from django.conf import settings
 from django.core.paginator import Paginator
+from django.utils.http import urlencode
 
 from YtManagerApp.IProvider import IProvider
 from YtManagerApp.management.videos import get_videos
 from YtManagerApp.management.appconfig import appconfig
-from YtManagerApp.models import Subscription, SubscriptionFolder, VIDEO_ORDER_CHOICES, VIDEO_ORDER_MAPPING
+from YtManagerApp.models import Subscription, SubscriptionFolder, Video, VIDEO_ORDER_CHOICES, VIDEO_ORDER_MAPPING
 from YtManagerApp.utils import subscription_file_parser
 from YtManagerApp.views.controls.modal import ModalMixin
+
+from typing import List
 
 import logging
 import datetime
@@ -240,6 +243,24 @@ def ajax_get_videos(request: HttpRequest):
         return render(request, 'YtManagerApp/index_videos.html', context)
 
     return HttpResponseBadRequest()
+
+
+@login_required
+def ajax_get_video_shuffle(request: HttpRequest):
+    time_remaining = 60*60  # Target length, 1 hour
+
+    videos: List[Video] = []
+
+    for subscription in Subscription.objects.all():
+        video = subscription.video_set.filter(watched=False, duration__lte=time_remaining).first()
+        if video:
+            time_remaining -= video.duration
+            videos.append(video)
+
+    url = reverse('video', args=[videos.pop().pk])
+    params = urlencode({"next": ",".join([str(video.id) for video in videos])})
+
+    return HttpResponseRedirect(url + "?%s" % params)
 
 
 class SubscriptionFolderForm(forms.ModelForm):
