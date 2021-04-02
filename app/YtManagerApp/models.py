@@ -180,8 +180,8 @@ class Video(models.Model):
         if self.downloaded_path is not None:
             from YtManagerApp.management.appconfig import appconfig
             if appconfig.for_sub(self.subscription, 'automatically_delete_watched'):
-                # self.subscription.get_provider().download_video(self)
-                self.subscription.get_provider().synchronise_channel(self.subscription)
+                self.delete()
+        self.subscription.get_provider().synchronise_channel(self.subscription)
 
     def mark_unwatched(self):
         self.watched = False
@@ -210,6 +210,7 @@ class Video(models.Model):
 
     def delete_files(self):
         for file in self.get_files():
+            logging.info('Deleting files for video %s: %s', self.video_id, file)
             os.unlink(file)
         self.downloaded_path = None
         self.save()
