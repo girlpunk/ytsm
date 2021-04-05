@@ -258,9 +258,9 @@ def ajax_get_video_shuffle(request: HttpRequest, subscription_pk=None, folder_pk
     videos: List[Video] = []
 
     if folder_pk is not None:
-        subscriptions = Subscription.objects.filter(folder_pk=folder_pk).order_by("?")
+        subscriptions = Subscription.objects.filter(parent_folder_id=folder_pk).order_by("?")
     elif subscription_pk is not None:
-        subscriptions = [Subscription.objects.filter(pk=subscription_pk)]
+        subscriptions = [Subscription.objects.get(pk=subscription_pk)]
     else:
         subscriptions = Subscription.objects.all().order_by("?")
 
