@@ -68,6 +68,12 @@ function tree_Initialize()
     });
     treeWrapper.on("changed.jstree", tree_OnSelectionChanged);
     treeWrapper.on("ready.jstree", tree_Ready);
+    treeWrapper.on("dnd_move.vakata", tree_Move);
+}
+
+function tree_Move(element, data) {
+    console.log("Tree move!");
+    console.log({data: data, element: element});
 }
 
 function tree_Ready(e, data) {
