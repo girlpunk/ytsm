@@ -41,8 +41,6 @@ class EventConsumer(WebsocketConsumer):
             self.jobs()
 
     def jobs(self):
-        # TODO: User filtering
-
         sync_all_tasks = django_celery_results.models.TaskResult.objects.filter(
             task_name="YtManagerApp.tasks.synchronize_all",
             date_created__gte=datetime.datetime.now()-datetime.timedelta(days=1))
@@ -51,13 +49,13 @@ class EventConsumer(WebsocketConsumer):
         response = []
 
         for taskResult in sync_all_tasks:
+            all_children += [taskResult.task_id]
             task = AsyncResult(taskResult.task_id)
 
-            children = flatten(get_all_children(task))
             complete_tasks = 0
             all_tasks = 0
 
-            for child in children:
+            for child in task.children:
                 if child.task_id not in all_children:
                     all_children += [child.task_id]
 
@@ -84,11 +82,10 @@ class EventConsumer(WebsocketConsumer):
         for taskResult in sync_other_tasks:
             task = AsyncResult(taskResult.task_id)
 
-            children = flatten(get_all_children(task))
             complete_tasks = 0
             all_tasks = 0
 
-            for child in children:
+            for child in task.children:
                 if child.successful():
                     complete_tasks += 1
                 all_tasks += 1
@@ -97,7 +94,7 @@ class EventConsumer(WebsocketConsumer):
 
             response += [{
                 'id': task.task_id,
-                'description': "Synchronize All",
+                'description': "Synchronize Others",
                 'progress': progress,
                 'message': str(complete_tasks) + " / " + str(all_tasks)
             }]
