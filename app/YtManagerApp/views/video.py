@@ -5,6 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Sum
 from django.http import HttpRequest, FileResponse
 from django.views.generic import DetailView
+from django.conf import settings
 
 from YtManagerApp.models import Video
 
@@ -12,6 +13,11 @@ from YtManagerApp.models import Video
 class VideoDetailView(LoginRequiredMixin, DetailView):
     template_name = 'YtManagerApp/video.html'
     model = Video
+
+    DISPLAYTYPE = [(provider+"/videoframe.html", provider) for provider in settings.INSTALLED_PROVIDERS]
+
+    def get_template_names(self):
+        return [self.object.subscription.provider]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
