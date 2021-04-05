@@ -33,7 +33,11 @@ def synchronize_channel(channel_id: int):
     if channel.last_synchronised is None:
         check_all_videos(channel)
     else:
-        check_rss_videos(channel)
+        try:
+            check_rss_videos(channel)
+        except Exception as e:
+            __log.exception("Error while running RSS Sync, running full sync", e)
+            check_all_videos(channel)
     channel.last_synchronised = datetime.datetime.now()
     channel.save()
 
