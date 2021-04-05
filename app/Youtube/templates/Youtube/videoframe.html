@@ -1,5 +1,10 @@
 {% extends "YtManagerApp/video.html" %}
 
+{% load static %}
+{% load humanize %}
+{% load ratings %}
+
+
 {% block scripts %}
     <script>
         function setWatchedStatus(state) {
