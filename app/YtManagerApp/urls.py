@@ -46,6 +46,8 @@ urlpatterns = [
     path('ajax/get_tree/', ajax_get_tree, name='ajax_get_tree'),
     path('ajax/get_videos/', ajax_get_videos, name='ajax_get_videos'),
     path('ajax/get_video_shuffle/', ajax_get_video_shuffle, name='ajax_get_video_shuffle'),
+    path('ajax/get_video_shuffle/subscription/<int:channel_pk>', ajax_get_video_shuffle, name='ajax_get_video_shuffle_subscription'),
+    path('ajax/get_video_shuffle/folder/<int:folder_pk>', ajax_get_video_shuffle, name='ajax_get_video_shuffle_folder'),
     path('ajax/get_tree_debug/', ajax_get_tree_debug, name='ajax_get_tree_debug'),
     path('ajax/get_running_jobs/', ajax_get_running_jobs, name='ajax_get_running_jobs'),
 

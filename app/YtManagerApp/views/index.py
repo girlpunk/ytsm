@@ -233,9 +233,17 @@ def ajax_get_videos(request: HttpRequest):
         paginator = Paginator(videos, form.cleaned_data['results_per_page'])
         videos = paginator.get_page(form.cleaned_data['page'])
 
+        if "folder_id" in form.cleaned_data and form.cleaned_data["folder_id"] is not "":
+            shuffle_url = reverse("ajax_get_video_shuffle_folder", args=[form.cleaned_data["folder_id"]])
+        elif "subscription_id" in form.cleaned_data and form.cleaned_data["subscription_id"] is not "":
+            shuffle_url = reverse("ajax_get_video_shuffle_subscription", args=[form.cleaned_data["folder_id"]])
+        else:
+            shuffle_url = reverse("ajax_get_video_shuffle")
+
         context = {
             'videos': videos,
-            'duration': duration
+            'duration': duration,
+            "shuffle_url": shuffle_url
         }
 
         return render(request, 'YtManagerApp/index_videos.html', context)
