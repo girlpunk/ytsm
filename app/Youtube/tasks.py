@@ -21,7 +21,7 @@ __lock = Lock()
 
 @shared_task
 def synchronize_channel(channel_id: int):
-    channel: Subscription = Subscription.objects.get(id=channel_id)
+    channel: Subscription = Subscription.objects.get(id=channel_id, provider="Youtube")
     __log.info("Starting synchronize " + channel.name)
     videos = Video.objects.filter(subscription=channel)
 
@@ -73,7 +73,7 @@ def synchronize_channel(channel_id: int):
 
 @shared_task
 def actual_synchronize_video(video_id: int):
-    video = Video.objects.get(id=video_id)
+    video = Video.objects.get(id=video_id, subscription__provider="Youtube")
     __log.info("Starting synchronize video " + video.video_id)
     if video.downloaded_path is not None:
         try:
@@ -111,6 +111,7 @@ def actual_synchronize_video(video_id: int):
 
         video.views = video_stats.n_views
         video.duration = video_stats.duration.total_seconds()
+        video.description = video_stats.description.encode("ascii", errors="ignore").decode()
         video.save()
 
 
@@ -119,7 +120,7 @@ def download_video(video_pk: int, attempt: int = 1):
     # Issue: if multiple videos are downloaded at the same time, a race condition appears in the mkdirs() call that
     # youtube-dl makes, which causes it to fail with the error 'Cannot create folder - file already exists'.
     # For now, allow a single download instance.
-    video = Video.objects.get(pk=video_pk)
+    video = Video.objects.get(pk=video_pk, subscription__provider="Youtube")
     __lock.acquire()
 
     try:
@@ -152,7 +153,7 @@ def download_video(video_pk: int, attempt: int = 1):
 
 @shared_task()
 def delete_video(video_pk: int):
-    video = Video.objects.get(pk=video_pk)
+    video = Video.objects.get(pk=video_pk, subscription__provider="Youtube")
     count = 0
 
     try:
