@@ -209,7 +209,12 @@ class Video(models.Model):
         return None, None
 
     def delete_files(self):
-        for file in self.get_files():
+        try:
+            files = self.get_files()
+        except FileNotFoundError:
+            logging.warning("Tried to fetch non-existant file listing for video %s", self.video_id)
+            files = []
+        for file in files:
             logging.info('Deleting files for video %s: %s', self.video_id, file)
             try:
                 os.unlink(file)
