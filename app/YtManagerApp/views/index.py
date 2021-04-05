@@ -264,17 +264,24 @@ def ajax_get_video_shuffle(request: HttpRequest, subscription_pk=None, folder_pk
     else:
         subscriptions = Subscription.objects.all().order_by("?")
 
-    first_video: Video = Video.objects.filter(watched=False, subscription__in=subscriptions).order_by('publish_date').first()
-    time_remaining -= first_video.duration
+    videos.append(Video.objects.filter(watched=False, subscription__in=subscriptions).order_by('publish_date').first())
+    time_remaining -= videos[0].duration
 
-    for subscription in subscriptions:
-        video = subscription.video_set.filter(watched=False)\
-            .exclude(pk=first_video.pk)\
-            .order_by('publish_date')\
-            .first()
-        if video and video.duration <= time_remaining:
-            time_remaining -= video.duration
-            videos.append(video)
+    idle_loops = 0
+
+    while idle_loops <= 2:
+        added_video = False
+        for subscription in subscriptions:
+            video = subscription.video_set.filter(watched=False)\
+                .exclude(pk__in=[video.pk for video in videos]) \
+                .order_by('publish_date')\
+                .first()
+            if video and video.duration <= time_remaining:
+                time_remaining -= video.duration
+                videos.append(video)
+                added_video = True
+        if not added_video:
+            idle_loops += 1
 
     url = reverse('video', args=[videos.pop().pk])
     params = urlencode({"next": ",".join([str(video.id) for video in videos])})
