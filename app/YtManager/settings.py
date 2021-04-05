@@ -65,7 +65,7 @@ CFG_PARSER_OPTS = {
     'DATA_DIR': DATA_DIR,
 }
 
-INSTALLED_PROVIDERS = ["Youtube"]
+INSTALLED_PROVIDERS = ["Youtube", "Twitch"]
 
 
 #
@@ -302,3 +302,6 @@ CONSOLE_LOG_FORMAT = '%(asctime)s | %(name)s | %(filename)s:%(lineno)d | %(level
 ASGI_APPLICATION = 'YtManager.routing.application'
 
 INTERNAL_IPS = get_global_opt('InternalIPs', cfg, env_variable='YTSM_INTERNAL_IP', fallback='').split(",")
+
+TWITCH_CLIENT_ID = get_global_opt('TWITCH_CLIENT_ID', cfg, env_variable='YTSM_TWITCH_CLIENT_ID', fallback='')
+TWITCH_CLIENT_SECRET = get_global_opt('TWITCH_CLIENT_SECRET', cfg, env_variable='YTSM_TWITCH_CLIENT_SECRET', fallback='')

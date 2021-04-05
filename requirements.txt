@@ -21,3 +21,4 @@ uvicorn[standard]
 Twisted<21
 easy_thumbnails
 django-debug-toolbar
+twitch-python
