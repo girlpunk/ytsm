@@ -9,21 +9,21 @@ import django_celery_results
 
 @login_required
 def ajax_get_running_jobs(request: HttpRequest):
-    sync_all_tasks = django_celery_results.models\
-        .TaskResult.objects\
-        .filter(task_name="YtManagerApp.tasks.synchronize_all", date_created__gte=datetime.datetime.now()-datetime.timedelta(days=1))
+    sync_all_tasks = django_celery_results.models.TaskResult.objects.filter(
+        task_name="YtManagerApp.tasks.synchronize_all",
+        date_created__gte=datetime.datetime.now()-datetime.timedelta(days=1))
 
     all_children = []
     response = []
 
     for taskResult in sync_all_tasks:
+        all_children += [taskResult.task_id]
         task = AsyncResult(taskResult.task_id)
 
-        children = flatten(get_all_children(task))
         complete_tasks = 0
         all_tasks = 0
 
-        for child in children:
+        for child in task.children:
             if child.task_id not in all_children:
                 all_children += [child.task_id]
 
@@ -43,17 +43,17 @@ def ajax_get_running_jobs(request: HttpRequest):
             'message': str(complete_tasks) + " / " + str(all_tasks)
         }]
 
-    sync_other_tasks = django_celery_results.models.TaskResult.objects\
-        .filter(date_done__isnull=True).exclude(task_id__in=all_children)
+    sync_other_tasks = django_celery_results.models.TaskResult.objects \
+        .filter(date_done__isnull=True) \
+        .exclude(task_id__in=all_children)
 
     for taskResult in sync_other_tasks:
         task = AsyncResult(taskResult.task_id)
 
-        children = flatten(get_all_children(task))
         complete_tasks = 0
         all_tasks = 0
 
-        for child in children:
+        for child in task.children:
             if child.successful():
                 complete_tasks += 1
             all_tasks += 1
@@ -62,7 +62,7 @@ def ajax_get_running_jobs(request: HttpRequest):
 
         response += [{
             'id': task.task_id,
-            'description': "Synchronize All",
+            'description': "Synchronize Others",
             'progress': progress,
             'message': str(complete_tasks) + " / " + str(all_tasks)
         }]
