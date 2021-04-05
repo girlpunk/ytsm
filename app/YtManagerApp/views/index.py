@@ -268,11 +268,11 @@ def ajax_get_video_shuffle(request: HttpRequest, subscription_pk=None, folder_pk
     time_remaining -= first_video.duration
 
     for subscription in subscriptions:
-        video = subscription.video_set.filter(watched=False, duration__lte=time_remaining)\
+        video = subscription.video_set.filter(watched=False)\
             .exclude(pk=first_video.pk)\
             .order_by('publish_date')\
             .first()
-        if video:
+        if video and video.duration <= time_remaining:
             time_remaining -= video.duration
             videos.append(video)
 
