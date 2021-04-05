@@ -14,10 +14,8 @@ class VideoDetailView(LoginRequiredMixin, DetailView):
     template_name = 'YtManagerApp/video.html'
     model = Video
 
-    DISPLAYTYPE = [(provider+"/videoframe.html", provider) for provider in settings.INSTALLED_PROVIDERS]
-
     def get_template_names(self):
-        return [self.object.subscription.provider]
+        return [self.object.subscription.provider+"/videoframe.html"]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
