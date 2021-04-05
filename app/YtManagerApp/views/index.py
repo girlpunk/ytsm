@@ -233,10 +233,10 @@ def ajax_get_videos(request: HttpRequest):
         paginator = Paginator(videos, form.cleaned_data['results_per_page'])
         videos = paginator.get_page(form.cleaned_data['page'])
 
-        if "folder_id" in form.cleaned_data and form.cleaned_data["folder_id"] is not "":
+        if "folder_id" in form.cleaned_data and form.cleaned_data["folder_id"] is not "" and form.cleaned_data["folder_id"] is not None:
             shuffle_url = reverse("ajax_get_video_shuffle_folder", args=[form.cleaned_data["folder_id"]])
-        elif "subscription_id" in form.cleaned_data and form.cleaned_data["subscription_id"] is not "":
-            shuffle_url = reverse("ajax_get_video_shuffle_subscription", args=[form.cleaned_data["folder_id"]])
+        elif "subscription_id" in form.cleaned_data and form.cleaned_data["subscription_id"] is not "" and form.cleaned_data["subscription_id"] is not None:
+            shuffle_url = reverse("ajax_get_video_shuffle_subscription", args=[form.cleaned_data["subscription_id"]])
         else:
             shuffle_url = reverse("ajax_get_video_shuffle")
 
@@ -252,12 +252,19 @@ def ajax_get_videos(request: HttpRequest):
 
 
 @login_required
-def ajax_get_video_shuffle(request: HttpRequest):
+def ajax_get_video_shuffle(request: HttpRequest, subscription_pk=None, folder_pk=None):
     time_remaining = 60*60  # Target length, 1 hour
 
     videos: List[Video] = []
 
-    for subscription in Subscription.objects.all().order_by('?'):
+    if folder_pk is not None:
+        subscriptions = Subscription.objects.filter(folder_pk=folder_pk).order_by("?")
+    elif subscription_pk is not None:
+        subscriptions = [Subscription.objects.filter(pk=subscription_pk)]
+    else:
+        subscriptions = Subscription.objects.all().order_by("?")
+
+    for subscription in subscriptions:
         video = subscription.video_set.filter(watched=False, duration__lte=time_remaining).order_by('publish_date').first()
         if video:
             time_remaining -= video.duration
