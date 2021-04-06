@@ -283,7 +283,7 @@ def ajax_get_video_shuffle(request: HttpRequest, subscription_pk=None, folder_pk
         if not added_video:
             idle_loops += 1
 
-    url = reverse('video', args=[videos.pop().pk])
+    url = reverse('video', args=[videos.pop(0).pk])
     params = urlencode({"next": ",".join([str(video.id) for video in videos])})
 
     return HttpResponseRedirect(url + "?%s" % params)
