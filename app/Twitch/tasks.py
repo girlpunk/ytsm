@@ -22,7 +22,7 @@ def synchronize_channel(channel_id: int):
     # Remove the 'new' flag
     videos.update(new=False)
 
-    channel_info = __api.user(channel.channel_id)
+    channel_info = __api.user(int(channel.channel_id))
     response = requests.get(channel_info.profile_image_url, stream=True)
     ext = mimetypes.guess_extension(response.headers['Content-Type'])
     file_name = f"{channel_info.id}{ext}"
@@ -119,8 +119,11 @@ def actual_synchronize_video(video_id: int):
         video_stats = __api.video(video.video_id)
 
         video.views = video_stats.view_count
-        video.duration = video_stats.duration
         video.description = video_stats.description.encode("ascii", errors="ignore").decode()
+
+        time = datetime.datetime.strptime(video_stats.duration, "%Hh%Mm%Ss")
+        video.duration = datetime.timedelta(hours=time.hour, minutes=time.minute, seconds=time.second).seconds
+
         video.save()
 
 
