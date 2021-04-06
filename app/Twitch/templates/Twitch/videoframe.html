@@ -44,6 +44,7 @@
     </script>
 
     {% if video_mime is None %}
+        <script src= "https://player.twitch.tv/js/embed/v1.js"></script>
         <script>
             var player;
 
@@ -128,8 +129,6 @@
             evt.initEvent("resize", false, true);
             window.dispatchEvent(evt);
         </script>
-
-        <script src= "https://player.twitch.tv/js/embed/v1.js"></script>
     {% endif %}
 {% endblock scripts %}
 
