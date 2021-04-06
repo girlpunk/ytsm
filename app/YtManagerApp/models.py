@@ -210,16 +210,14 @@ class Video(models.Model):
 
     def delete_files(self):
         try:
-            files = self.get_files()
+            for file in self.get_files():
+                logging.info('Deleting files for video %s: %s', self.video_id, file)
+                try:
+                    os.unlink(file)
+                except FileNotFoundError:
+                    logging.warning("Tried to delete non-existant file %s for video %s", file, self.video_id)
         except FileNotFoundError:
             logging.warning("Tried to fetch non-existant file listing for video %s", self.video_id)
-            files = []
-        for file in files:
-            logging.info('Deleting files for video %s: %s', self.video_id, file)
-            try:
-                os.unlink(file)
-            except FileNotFoundError:
-                logging.warning("Tried to delete non-existant file %s for video %s", file, self.video_id)
         self.downloaded_path = None
         self.save()
         self.subscription.get_provider().synchronise_channel(self.subscription)
