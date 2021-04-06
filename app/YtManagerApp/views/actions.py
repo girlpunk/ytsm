@@ -8,9 +8,13 @@ from YtManagerApp.models import Video, Subscription
 
 class SyncNowView(LoginRequiredMixin, View):
     def post(self, *args, **kwargs):
-        if 'pk' in kwargs:
-            subscription = Subscription.objects.get(id=kwargs['pk'])
+        if 'subscription_pk' in kwargs:
+            subscription = Subscription.objects.get(id=kwargs['subscription_pk'])
             subscription.get_provider().synchronise_channel(subscription)
+        elif 'folder_pk' in kwargs:
+            subscriptions = Subscription.objects.filter(parent_folder_id=kwargs['folder_pk'])
+            for subscription in subscriptions:
+                subscription.get_provider().synchronise_channel(subscription)
         else:
             tasks.synchronize_all.delay()
         return JsonResponse({

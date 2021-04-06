@@ -37,7 +37,8 @@ urlpatterns = [
 
     # Ajax
     path('ajax/action/sync_now/', SyncNowView.as_view(), name='ajax_action_sync_now'),
-    path('ajax/action/sync_now/<int:pk>', SyncNowView.as_view(), name='ajax_action_sync_now'),
+    path('ajax/action/sync_now/subscription/<int:subscription_pk>', SyncNowView.as_view(), name='ajax_action_sync_now'),
+    path('ajax/action/sync_now/folder/<int:folder_pk>', SyncNowView.as_view(), name='ajax_action_sync_now'),
     path('ajax/action/delete_video_files/<int:pk>', DeleteVideoFilesView.as_view(), name='ajax_action_delete_video_files'),
     path('ajax/action/download_video_files/<int:pk>', DownloadVideoFilesView.as_view(), name='ajax_action_download_video_files'),
     path('ajax/action/mark_video_watched/<pk>', MarkVideoWatchedView.as_view(), name='ajax_action_mark_video_watched'),

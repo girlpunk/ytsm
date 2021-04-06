@@ -24,7 +24,7 @@
 {% block modal_scripts %}
 <script>
     function synchronizeChannelNow() {
-        $.post("{% url 'ajax_action_sync_now' form.instance.pk %}", {
+        $.post("{% url 'ajax_action_sync_now' subscription_pk=form.instance.pk %}", {
             csrfmiddlewaretoken: '{{ csrf_token }}'
         }, () => {
         });
