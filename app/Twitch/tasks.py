@@ -45,7 +45,7 @@ def synchronize_channel(channel_id: int):
             video.playlist_index = 0
             video.publish_date = item.published_at
 
-            response = requests.get(item.thumbnail_url, stream=True)
+            response = requests.get(item.thumbnail_url.replace("%{width}", "1920").replace("%{height}", "1080"), stream=True)
             ext = mimetypes.guess_extension(response.headers['Content-Type'])
             file_name = f"{item.id}{ext}"
             video.thumb.save(file_name, response.raw)
