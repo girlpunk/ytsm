@@ -17,3 +17,11 @@ def synchronize_all():
     channels = Subscription.objects.all().order_by(F('last_synchronised').desc(nulls_first=True))
     for channel in channels:
         channel.get_provider().synchronise_channel(channel)
+
+
+@shared_task()
+def synchronize_folder(folder_id: int):
+    log.info("Starting sync folder")
+    subscriptions = Subscription.objects.filter(parent_folder_id=folder_id)
+    for subscription in subscriptions:
+        subscription.get_provider().synchronise_channel(subscription)

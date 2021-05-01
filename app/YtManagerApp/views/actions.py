@@ -12,9 +12,7 @@ class SyncNowView(LoginRequiredMixin, View):
             subscription = Subscription.objects.get(id=kwargs['subscription_pk'])
             subscription.get_provider().synchronise_channel(subscription)
         elif 'folder_pk' in kwargs:
-            subscriptions = Subscription.objects.filter(parent_folder_id=kwargs['folder_pk'])
-            for subscription in subscriptions:
-                subscription.get_provider().synchronise_channel(subscription)
+            tasks.synchronize_folder.delay(kwargs['folder_pk'])
         else:
             tasks.synchronize_all.delay()
         return JsonResponse({
