@@ -1,3 +1,4 @@
+import celery.exceptions
 from channels.generic.websocket import WebsocketConsumer
 import json
 
@@ -69,14 +70,18 @@ class EventConsumer(WebsocketConsumer):
             complete_tasks = 0
             all_tasks = 0
 
-            if task.graph:
-                for child in flatten(task.graph.items()):
+            try:
+                graph = task.graph.items()
+                for child in flatten(graph):
                     if child.task_id not in all_children:
                         all_children.append(child.task_id)
 
                     if child.successful():
                         complete_tasks += 1
                     all_tasks += 1
+            except (celery.exceptions.IncompleteStream, KeyError):
+                # Not sure why this breaks, appears related to incomplete tasks
+                pass
 
             if all_tasks - complete_tasks == 0:
                 continue
