@@ -69,13 +69,14 @@ class EventConsumer(WebsocketConsumer):
             complete_tasks = 0
             all_tasks = 0
 
-            for child in flatten(task.graph.items()):
-                if child.task_id not in all_children:
-                    all_children.append(child.task_id)
+            if task.graph:
+                for child in flatten(task.graph.items()):
+                    if child.task_id not in all_children:
+                        all_children.append(child.task_id)
 
-                if child.successful():
-                    complete_tasks += 1
-                all_tasks += 1
+                    if child.successful():
+                        complete_tasks += 1
+                    all_tasks += 1
 
             if all_tasks - complete_tasks == 0:
                 continue
