@@ -1,12 +1,14 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.views.generic import View
+from django.views.decorators.csrf import csrf_exempt
 
 from YtManagerApp import tasks
 from YtManagerApp.models import Video, Subscription
 
 
-class SyncNowView(LoginRequiredMixin, View):
+@csrf_exempt
+class SyncNowView(View):
     def post(self, *args, **kwargs):
         if 'subscription_pk' in kwargs:
             subscription = Subscription.objects.get(id=kwargs['subscription_pk'])
