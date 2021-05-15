@@ -7,8 +7,8 @@ from YtManagerApp import tasks
 from YtManagerApp.models import Video, Subscription
 
 
-@csrf_exempt
 class SyncNowView(View):
+    @csrf_exempt
     def post(self, *args, **kwargs):
         if 'subscription_pk' in kwargs:
             subscription = Subscription.objects.get(id=kwargs['subscription_pk'])
