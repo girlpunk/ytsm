@@ -8,6 +8,12 @@ from YtManagerApp.models import Video, Subscription
 
 
 class SyncNowView(View):
+    def get(self):
+        tasks.synchronize_all.delay()
+        return JsonResponse({
+            'success': True
+        })
+
     @csrf_exempt
     def post(self, *args, **kwargs):
         if 'subscription_pk' in kwargs:
