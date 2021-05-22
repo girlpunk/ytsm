@@ -8,7 +8,7 @@ from YtManagerApp.models import Video, Subscription
 
 
 class SyncNowView(View):
-    def get(self):
+    def get(self, request):
         tasks.synchronize_all.delay()
         return JsonResponse({
             'success': True
