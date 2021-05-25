@@ -280,7 +280,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 # Thumbnails
 THUMBNAIL_SIZE_VIDEO = (410, 230)
