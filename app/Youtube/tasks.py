@@ -35,7 +35,7 @@ def synchronize_channel(channel_id: int):
     if channel.last_synchronised is None:
         check_all_videos(channel)
     else:
-        if (datetime.datetime.now() - channel.last_synchronised) > datetime.timedelta(days=1):
+        if (datetime.datetime.now(datetime.timezone.utc) - channel.last_synchronised) > datetime.timedelta(days=1):
             utils.load_resource_thumbnail(channel.playlist_id, __api.channel(channel.channel_id), channel.thumb, __log)
         try:
             check_rss_videos(channel)
