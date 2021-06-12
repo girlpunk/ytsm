@@ -33,6 +33,7 @@ jobs:
       run: |
         python manage.py test
   publish:
+    needs: [build]
     strategy:
       max-parallel: 1
     runs-on: ubuntu-latest
