@@ -28,6 +28,9 @@ def synchronize_channel(channel_id: int):
     # Remove the 'new' flag
     videos.update(new=False)
 
+    for video in videos:
+        synchronize_video(video)
+
     __log.info("Starting check new videos " + channel.name)
     if channel.last_synchronised is None:
         check_all_videos(channel)
@@ -41,9 +44,6 @@ def synchronize_channel(channel_id: int):
             check_all_videos(channel)
     channel.last_synchronised = datetime.datetime.now()
     channel.save()
-
-    for video in videos:
-        synchronize_video(video)
 
     enabled = first_non_null(channel.auto_download, channel.user.preferences['auto_download'])
 
