@@ -42,7 +42,7 @@ def synchronize_channel(channel_id: int):
         except Exception as e:
             __log.exception("Error while running RSS Sync, running full sync", e)
             check_all_videos(channel)
-    channel.last_synchronised = datetime.datetime.now()
+    channel.last_synchronised = datetime.datetime.now(datetime.timezone.utc)
     channel.save()
 
     enabled = first_non_null(channel.auto_download, channel.user.preferences['auto_download'])
