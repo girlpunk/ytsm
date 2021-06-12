@@ -31,7 +31,7 @@ jobs:
         pip install -r requirements.txt
     - name: Run Tests
       run: |
-        python manage.py test
+        python app/manage.py test
   publish:
     needs: [build]
     strategy:
