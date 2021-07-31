@@ -65,7 +65,7 @@ CFG_PARSER_OPTS = {
     'DATA_DIR': DATA_DIR,
 }
 
-INSTALLED_PROVIDERS = ["Youtube", "Twitch"]
+INSTALLED_PROVIDERS = ["Youtube", "Twitch", "Sonarr"]
 
 
 #
@@ -306,3 +306,6 @@ INTERNAL_IPS = get_global_opt('InternalIPs', cfg, env_variable='YTSM_INTERNAL_IP
 
 TWITCH_CLIENT_ID = get_global_opt('TWITCH_CLIENT_ID', cfg, env_variable='YTSM_TWITCH_CLIENT_ID', fallback='')
 TWITCH_CLIENT_SECRET = get_global_opt('TWITCH_CLIENT_SECRET', cfg, env_variable='YTSM_TWITCH_CLIENT_SECRET', fallback='')
+
+SONARR_URL = get_global_opt('SONARR_URL', cfg, env_variable='YTSM_SONARR_URL', fallback='')
+SONARR_API_KEY = get_global_opt('SONARR_API_KEY', cfg, env_variable='YTSM_SONARR_API_KEY', fallback='')

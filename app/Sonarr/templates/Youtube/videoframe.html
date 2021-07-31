@@ -1,0 +1,93 @@
+{% extends "YtManagerApp/video.html" %}
+
+{% load static %}
+{% load humanize %}
+{% load ratings %}
+
+
+{% block scripts %}
+    <script>
+        function setWatchedStatus(state) {
+            $("#watchButton")[0].innerHTML="<span class='typcn typcn-arrow-sync'></span>";
+            if(state) {
+                $.post("{% url 'ajax_action_mark_video_watched' object.id %}", {
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                }, function() {
+                    $("#watchButton")[0].innerHTML="<span class='typcn typcn-eye' style='color:lightgreen;'></span>";
+                    $("#watchButton").attr("title", "Mark as not watched");
+                    $("#watchButton").attr("onclick","setWatchedStatus(0)");
+
+                    goNextVideo();
+                });
+            } else {
+                $.post("{% url 'ajax_action_mark_video_unwatched' object.id %}", {
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                }, function() {
+                    $("#watchButton")[0].innerHTML="<span class='typcn typcn-eye-outline'></span>";
+                    $("#watchButton").attr("title", "Mark as watched");
+                    $("#watchButton").attr("onclick","setWatchedStatus(0)");
+                });
+            }
+        }
+
+        function goNextVideo() {
+            var urlParams = new URLSearchParams(window.location.search);
+            if(urlParams.has("next")) {
+                var videos = urlParams.get("next");
+                if(videos == "") {return;}
+                videos = videos.split(",");
+                var next = videos.shift();
+
+                //TODO: Don't really like the URL construction here
+                window.location.href = "{% url 'video' 0 %}".replace("0", next)+"?next="+videos.join(",");
+            }
+        }
+    </script>
+{% endblock scripts %}
+
+{% block navbarsupportedcontent %}
+    {% if object.watched %}
+        <a id="watchButton" class="btn btn-secondary nav-item" onclick="setWatchedStatus(0)" title="Mark not watched" data-toggle="tooltip" href="#" style="margin: 0 3px;">
+            <span class="typcn typcn-eye" style="color:lightgreen;"></span>
+        </a>
+    {% else %}
+        <a id="watchButton" class="btn btn-secondary nav-item" onclick="setWatchedStatus(1)" title="Mark watched" data-toggle="tooltip" href="#" style="margin: 0 3px;">
+            <span class="typcn typcn-eye-outline"></span>
+        </a>
+    {% endif %}
+    <a id="nextButton" class="btn btn-secondary nav-item" onclick="goNextVideo()" title="Go to Next Video" data-toggle="tooltip" href="#" style="margin: 0 3px;">
+        <span class="typcn typcn-media-fast-forward"></span>
+    </a>
+    {% if up_next_count %}
+        <span class="btn btn-secondary ajax-link nav-item" style="margin: 0 3px;">{{ up_next_count }}, {{ up_next_duration }}</span>
+    {% endif %}
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            TODO: Video player goes here
+            <video width="100%" height="600px" controls autoplay>
+                <source src="{% url 'video-src' object.id %}" type="{{ video_mime }}">
+            </video>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="row mx-0 mt-2">
+                <p class="text-muted mb-1">
+                    <span>{{ object.publish_date | naturaltime }}</span>
+                </p>
+                <div class="ml-auto">
+                    {% starrating object.rating %}
+                </div>
+            </div>
+            <div class="video-description">
+                {{ object.description | linebreaks | urlize }}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
