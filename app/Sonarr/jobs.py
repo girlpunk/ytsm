@@ -51,7 +51,7 @@ class Jobs(IProvider):
         subscription.channel_id = series.id
         subscription.channel_name = series.network
 
-        response = requests.get(series.images[0].remoteUrl, stream=True)
+        response = requests.get(series.images[0]['remoteUrl'], stream=True)
         ext = mimetypes.guess_extension(response.headers['Content-Type'])
         file_name = f"{series.id}{ext}"
 
