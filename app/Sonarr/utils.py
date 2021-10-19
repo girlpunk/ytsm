@@ -1,4 +1,4 @@
-from YtManagerApp.models import settings
+from django.conf import settings
 
 from pycliarr.api import SonarrCli
 
