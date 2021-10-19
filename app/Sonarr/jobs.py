@@ -6,7 +6,7 @@ import mimetypes
 from pycliarr.api import SonarrCli, SonarrSerieItem
 from Sonarr import tasks, utils
 from YtManagerApp.IProvider import IProvider
-from YtManagerApp.management.appconfig import appconfig
+from django.conf import settings
 from YtManagerApp.models import Video, Subscription
 from typing import List, Callable
 
@@ -27,7 +27,7 @@ class Jobs(IProvider):
     @staticmethod
     def is_url_valid_for_module(url: str) -> bool:
 
-        return url.startswith(appconfig.sonarr_url_base)
+        return url.startswith(settings.SONARR_URL)
 
     @staticmethod
     def process_url(url: str, subscription: Subscription):
