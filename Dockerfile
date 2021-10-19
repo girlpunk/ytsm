@@ -12,7 +12,6 @@ COPY ./requirements.txt ./
 
 RUN apk add --no-cache --virtual .build-deps ffmpeg mariadb-client mariadb-dev build-base libffi-dev rust cargo jpeg-dev python3-dev && \
     pip install --no-cache-dir -r requirements.txt && \
-    rm -r /root/.cargo && \
     apk del build-base rust cargo python3-dev
 
 ENV YTSM_DEBUG='False'
