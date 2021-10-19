@@ -37,13 +37,13 @@ class Jobs(IProvider):
 
         all_series: List[SonarrSerieItem] = sonarr_api.get_serie()
 
-        filter_func: Callable[[SonarrSerieItem], bool] = lambda item: item.cleanTitle == url_title
+        filter_func: Callable[[SonarrSerieItem], bool] = lambda item: item.titleSlug == url_title
         matching_series: SonarrSerieItem = list(filter(filter_func, all_series))
 
         if matching_series and (len(matching_series) == 1):
             series = matching_series[0]
         else:
-            raise ValueError("Invalid URL")
+            raise ValueError("Invalid URL - Unable to match show from Sonarr")
 
         subscription.name = series.title
         subscription.playlist_id = series.id
