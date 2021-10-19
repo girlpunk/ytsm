@@ -33,7 +33,7 @@ def synchronize_channel(channel_id: int):
         video, isNew = videos.update_or_create(video_id=episode["id"],
                                         subscription__pk=channel_id,
                                         defaults={
-                                            "files": list(episode["episodeFile"]["path"]),
+                                            # "files": list(episode["episodeFile"]["path"]),
                                             "downloaded_path": episode["episodeFile"]["path"],
                                             "description": episode["overview"],
                                             "name": episode["title"],
