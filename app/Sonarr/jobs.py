@@ -40,7 +40,7 @@ class Jobs(IProvider):
         filter_func: Callable[[SonarrSerieItem], bool] = lambda item: item.cleanTitle == url_title
         matching_series: SonarrSerieItem = list(filter(filter_func, all_series))
 
-        if matching_series & len(matching_series) == 1:
+        if matching_series and (len(matching_series) == 1):
             series = matching_series[0]
         else:
             raise ValueError("Invalid URL")
@@ -58,3 +58,4 @@ class Jobs(IProvider):
         subscription.thumb.save(file_name, response.raw)
 
         subscription.save()
+0
