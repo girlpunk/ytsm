@@ -29,7 +29,7 @@ def synchronize_channel(channel_id: int):
     episodes: List[dict] = __api.get_episode(channel.channel_id)
 
     for episode in filter(lambda episode: episode["hasFile"], episodes):
-        __log.info("Starting synchronize series "+episode.seriesId+", episode " + episode.absoluteEpisodeNumber)
+        __log.info("Starting synchronize series "+episode['seriesId']+", episode " + episode['absoluteEpisodeNumber'])
         video, isNew = videos.update_or_create(video_id=episode["id"],
                                         subscription__pk=channel_id,
                                         defaults={
