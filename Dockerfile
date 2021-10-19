@@ -1,4 +1,4 @@
-FROM python:3.10-alpine
+FROM python:3.9-alpine
 ENV PYTHONUNBUFFERED 1
 WORKDIR /opt/ytsm
 
@@ -10,9 +10,9 @@ WORKDIR /opt/ytsm
 
 COPY ./requirements.txt ./
 
-RUN apk add --no-cache --virtual .build-deps ffmpeg mariadb-client mariadb-dev build-base libffi-dev rust cargo jpeg-dev python3-dev && \
+RUN apk add --no-cache ffmpeg mariadb-client mariadb-dev build-base libffi-dev jpeg-dev python3-dev && \
     pip install --no-cache-dir -r requirements.txt && \
-    apk del build-base rust cargo python3-dev
+    apk del build-base python3-dev
 
 ENV YTSM_DEBUG='False'
 ENV YTSM_DATA_DIR='/data'
