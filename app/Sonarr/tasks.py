@@ -40,7 +40,7 @@ def synchronize_channel(channel_id: int):
                                             "subscription": channel,
                                             "playlist_index": episode["absoluteEpisodeNumber"],
                                             "publish_date": episode["airDate"]
-                                        })[0]
+                                        })
 
         if isNew:
             video.watched = False
