@@ -17,7 +17,7 @@ def webhook(request: HttpRequest):
         if results:
             tasks.synchronize_video(results)
         else:
-            video_title = entry.find("{http://www.w3.org/2005/Atom}title").text.encode("ascii", errors="ignore").decode()
+            video_title = entry.find("{http://www.w3.org/2005/Atom}title").text
 
             video = Video()
             video.video_id = video_id

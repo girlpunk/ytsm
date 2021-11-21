@@ -36,8 +36,8 @@ def synchronize_channel(channel_id: int):
         if not results.exists():
             video = Video()
             video.video_id = item.id
-            video.name = item.title.encode("ascii", errors="ignore").decode()
-            video.description = item.description.encode("ascii", errors="ignore").decode()
+            video.name = item.title
+            video.description = item.description
             video.watched = False
             video.new = True
             video.downloaded_path = None
@@ -119,7 +119,7 @@ def actual_synchronize_video(video_id: int):
         video_stats = __api.video(video.video_id)
 
         video.views = video_stats.view_count
-        video.description = video_stats.description.encode("ascii", errors="ignore").decode()
+        video.description = video_stats.description
 
         time = datetime.datetime.strptime(video_stats.duration, "%Hh%Mm%Ss")
         video.duration = datetime.timedelta(hours=time.hour, minutes=time.minute, seconds=time.second).seconds
