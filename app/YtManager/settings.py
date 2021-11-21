@@ -168,6 +168,21 @@ else:
                                env_variable='YTSM_DB_PORT', fallback=_DEFAULT_DATABASE['PORT']),
     }
 
+    DATABASES["postgresql"] = {
+        'ENGINE': get_global_opt('Database2Engine', cfg,
+                                 env_variable='YTSM_DB_ENGINE', fallback=_DEFAULT_DATABASE['ENGINE']),
+        'NAME': get_global_opt('Database2Name', cfg,
+                               env_variable='YTSM_DB_NAME', fallback=_DEFAULT_DATABASE['NAME']),
+        'HOST': get_global_opt('Database2Host', cfg,
+                               env_variable='YTSM_DB_HOST', fallback=_DEFAULT_DATABASE['HOST']),
+        'USER': get_global_opt('Database2User', cfg,
+                               env_variable='YTSM_DB_USER', fallback=_DEFAULT_DATABASE['USER']),
+        'PASSWORD': get_global_opt('Database2Password', cfg,
+                                   env_variable='YTSM_DB_PASSWORD', fallback=_DEFAULT_DATABASE['PASSWORD']),
+        'PORT': get_global_opt('Database2Port', cfg,
+                               env_variable='YTSM_DB_PORT', fallback=_DEFAULT_DATABASE['PORT']),
+    }
+
 # Log settings
 # global LOG_LEVEL
 log_level_str = get_global_opt('LogLevel', cfg, env_variable='YTSM_LOG_LEVEL', fallback='INFO')
