@@ -10,7 +10,7 @@ WORKDIR /opt/ytsm
 
 COPY ./requirements.txt ./
 
-RUN apk add --no-cache ffmpeg mariadb-client mariadb-dev build-base libffi-dev jpeg-dev python3-dev && \
+RUN apk add --no-cache ffmpeg mariadb-client mariadb-dev build-base libffi-dev jpeg-dev python3-dev postgresql-dev && \
     pip install --no-cache-dir -r requirements.txt && \
     apk del build-base python3-dev
 
